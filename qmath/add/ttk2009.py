@@ -5,7 +5,7 @@ from psiqworkbench.interfaces import Adder
 from psiqworkbench.interoperability import implements
 from psiqworkbench.qubricks import Qubrick
 
-from ..utils.qubit import ccnot, cnot
+from ..utils.gates import ccnot, cnot
 
 
 class ApplyOuterTTKAdder(Qubrick):

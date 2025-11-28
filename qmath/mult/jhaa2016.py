@@ -1,17 +1,18 @@
-from psiqworkbench import QUInt
+from psiqworkbench import Qubits, QUInt
 from psiqworkbench.interoperability import implements
 from psiqworkbench.qubricks import Qubrick
-from ..utils.qubit import Qubit, ccnot, controlled_swap
 
-from .multiplier import Multiplier
+from ..utils.gates import ccnot, controlled_swap
 from ..utils.rotate import rotate_right
+from .multiplier import Multiplier
 
 
 # Computes p+=am*b[1..].
 # b[0] must be prepared in zero state and is returned in zero state.
-def _add_nop(p: list[Qubit], b: list[Qubit], am: Qubit):
+def _add_nop(p: Qubits, b: Qubits, am: Qubits):
     n = len(b) - 1
     assert len(p) == n + 1, "Register sizes must match."
+    assert len(am) == 1
 
     for i in range(n):
         ccnot(am, b[i + 1], p[i])
@@ -40,8 +41,8 @@ class JHHAMultipler(Qubrick):
         n = len(a)
         assert len(b) == n, "Register sizes must match."
         assert len(result) == 2 * n, "Register sizes must match."
-        z_cin: Qubit = Qubit(self.alloc_temp_qreg(1, "anc"))
-        b1: list[Qubit] = [z_cin] + Qubit.list(b)
+        z_cin: Qubits = self.alloc_temp_qreg(1, "anc")
+        b1 = z_cin | b
 
         for i in range(n - 1):
             _add_nop(result[n - 1 : 2 * n], b1, a[i])

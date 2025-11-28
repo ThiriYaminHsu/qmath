@@ -1,15 +1,18 @@
-from psiqworkbench import QUInt
-from psiqworkbench.qubricks import Qubrick
+from psiqworkbench import Qubits, QUInt
 from psiqworkbench.interoperability import implements
+from psiqworkbench.qubricks import Qubrick
 
-from ..utils.qubit import cnot, ccnot, Qubit
+from ..utils.gates import ccnot, cnot
 from .multiplier import Multiplier
 
 
 # Controlled addition, described in section III of the paper.
-def _ctrl_add(ctrl: Qubit, a: list[Qubit], b: list[Qubit], z0: Qubit, z1: Qubit):
+def _ctrl_add(ctrl: Qubits, a: Qubits, b: Qubits, z0: Qubits, z1: Qubits):
     n = len(a)
     assert len(b) == n, "Size mismatch."
+    assert len(ctrl) == 1
+    assert len(z0) == 1
+    assert len(z1) == 1
 
     # Step 1.
     for i in range(1, n):
@@ -61,8 +64,8 @@ class MCTMultipler(Qubrick):
         n1 = len(a)
         n2 = len(b)
         assert len(result) == n1 + n2, "Size mismatch."
-        anc: Qubit = Qubit(self.alloc_temp_qreg(1, "anc"))
-        p: list[Qubit] = Qubit.list(result) + [anc]
+        anc: Qubits = self.alloc_temp_qreg(1, "anc")
+        p: Qubits = result | anc
 
         # Step 1.
         for i in range(n1):

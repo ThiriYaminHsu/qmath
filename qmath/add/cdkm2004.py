@@ -5,17 +5,17 @@ from psiqworkbench.interfaces import Adder
 from psiqworkbench.interoperability import implements
 from psiqworkbench.qubricks import Qubrick
 
-from ..utils.qubit import Qubit, ccnot, cnot
+from ..utils.gates import ccnot, cnot
 
 
-def _maj(a: Qubit, b: Qubit, c: Qubit):
+def _maj(a: Qubits, b: Qubits, c: Qubits):
     cnot(c, b)
     cnot(c, a)
     ccnot(a, b, c)
 
 
 # UnMajority and Add (2-CNOT version).
-def _uma_v1(a: Qubit, b: Qubit, c: Qubit):
+def _uma_v1(a: Qubits, b: Qubits, c: Qubits):
     ccnot(a, b, c)
     cnot(c, a)
     cnot(a, b)
@@ -23,10 +23,11 @@ def _uma_v1(a: Qubit, b: Qubit, c: Qubit):
 
 # Simple (unoptimized) version of the adder, from §2.
 # Computes b:=(a+b)%(2^n); z⊕=(a+b)/(2^n).
-def _add_simple(qbk: Qubrick, a: list[Qubit], b: list[Qubit], z: Qubit):
+def _add_simple(qbk: Qubrick, a: Qubits, b: Qubits, z: Qubits):
     n = len(a)
     assert len(b) == n, "Register sizes must match."
-    c = Qubit(qbk.alloc_temp_qreg(1, "c"))
+    assert len(z) == 1
+    c = qbk.alloc_temp_qreg(1, "c")
 
     _maj(c, b[0], a[0])
     for i in range(1, n):
@@ -41,11 +42,12 @@ def _add_simple(qbk: Qubrick, a: list[Qubit], b: list[Qubit], z: Qubit):
 
 # Optimized adder, from §3.
 # Computes b:=(a+b)%(2^n); z⊕=(a+b)/(2^n).
-def _add_optimized(qbk: Qubrick, a: list[Qubit], b: list[Qubit], z: Qubit):
+def _add_optimized(qbk: Qubrick, a: Qubits, b: Qubits, z: Qubits):
     n = len(a)
     assert len(b) == n, "Register sizes must match."
     assert n >= 4, "n must be at least 4."
-    c = Qubit(qbk.alloc_temp_qreg(1, "c"))
+    assert len(z) == 1
+    c = qbk.alloc_temp_qreg(1, "c")
 
     for i in range(1, n):
         cnot(a[i], b[i])
