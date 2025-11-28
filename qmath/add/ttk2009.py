@@ -6,6 +6,7 @@ from psiqworkbench.interoperability import implements
 from psiqworkbench.qubricks import Qubrick
 
 from ..utils.gates import ccnot, cnot
+from ..utils.padding import padded
 
 
 class ApplyOuterTTKAdder(Qubrick):
@@ -34,7 +35,7 @@ class ApplyInnerTTKAdderWithCarry(Qubrick):
         assert n > 0, "rhs should not be empty."
         for idx in range(n - 1):
             ccnot(rhs[idx], lhs[idx], rhs[idx + 1])
-        ccnot(rhs[n - 1], lhs[n - 1], lhs[n])
+        ccnot(rhs[n - 1], lhs[n - 1], lhs[n], ctrl=ctrl)
         for idx in range(n - 1, 0, -1):
             cnot(rhs[idx], lhs[idx], ctrl=ctrl)
             ccnot(rhs[idx - 1], lhs[idx - 1], rhs[idx])
@@ -77,6 +78,6 @@ class TTKAdder(Qubrick):
         else:
             assert rhs_len + 2 <= lhs_len
             # Pad rhs so that its length is one qubit shorter than lhs.
-            padding: Qubits = self.alloc_temp_qreg(lhs_len - rhs_len - 1, "padding")
-            self._compute(lhs, rhs | padding, ctrl=ctrl)
-            padding.release()
+            with padded(self, (rhs,), (len(lhs) - 1,)) as (rhs,):
+                assert len(rhs) == len(lhs) - 1
+                self._compute(lhs, rhs)
