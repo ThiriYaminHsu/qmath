@@ -8,9 +8,10 @@ Implementation of adder and multiplier presented in the paper:
 from psiqworkbench import QUInt
 from psiqworkbench.interoperability import implements
 from psiqworkbench.qubricks import Qubrick
-from ..utils import Qubit, ccnot, controlled_swap, rotate_right
+from ..utils import Qubit, ccnot, controlled_swap
 
 from .multiplier import Multiplier
+from ..utils.rotate import rotate_right
 
 
 # Computes p+=am*b[1..].
