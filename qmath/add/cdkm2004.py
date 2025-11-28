@@ -1,14 +1,7 @@
-"""
-Implementation of the adder presented in paper:
-   A new quantum ripple-carry addition circuit
-   Cuccaro, Draper, Kutin, Moulton, 2004.
-   https://arxiv.org/pdf/quant-ph/0410184
-"""
-
 from typing import Optional
 
-from psiqworkbench import Qubits
-from psiqworkbench.interfaces import Adder, AdderWithCarry
+from psiqworkbench import Qubits, QUInt
+from psiqworkbench.interfaces import Adder
 from psiqworkbench.interoperability import implements
 from psiqworkbench.qubricks import Qubrick
 
@@ -90,13 +83,23 @@ def _add_optimized(qbk: Qubrick, a: list[Qubit], b: list[Qubit], z: Qubit):
     c.release()
 
 
-@implements(Adder[Qubits, Qubits])
+@implements(Adder[QUInt, QUInt])
 class CdkmAdder(Qubrick):
+    """Computes lhs += rhs.
+
+    Sizes of registers must match or lhs must be 1 qubit longer.
+
+    Implementation of the adder presented in paper:
+        "A new quantum ripple-carry addition circuit",
+        Cuccaro, Draper, Kutin, Moulton, 2004.
+        https://arxiv.org/abs/quant-ph/0410184
+    """
+
     def __init__(self, *, optimized: bool = True, **kwargs):
         super().__init__(**kwargs)
         self.optimized = optimized
 
-    def _compute(self, lhs: Qubits, rhs: Qubits, ctrl: Optional[Qubits] = None):
+    def _compute(self, lhs: QUInt, rhs: QUInt, ctrl: Optional[Qubits] = None):
         assert ctrl is None, "Control is not supported."
         b = Qubit.list(lhs)
         a = Qubit.list(rhs)
@@ -110,7 +113,7 @@ class CdkmAdder(Qubrick):
                 _add_simple(self, a[0 : n - 1], b[0 : n - 1], b[n - 1])
             cnot(a[n - 1], b[n - 1])
         elif len(b) == n + 1:
-            # Addition wth carry.
+            # Addition with carry.
             if n >= 4 and self.optimized:
                 _add_optimized(self, a, b[0:n], b[n])
             else:

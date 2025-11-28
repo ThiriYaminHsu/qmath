@@ -1,10 +1,3 @@
-"""
-Implementation of the multiplier presented in paper:
-   T-count Optimized Design of Quantum Integer Multiplication
-   Edgard Muñoz-Coreas, Himanshu Thapliyal, 2017.
-   https://arxiv.org/pdf/1706.05113
-"""
-
 from psiqworkbench import QUInt
 from psiqworkbench.qubricks import Qubrick
 from psiqworkbench.interoperability import implements
@@ -57,6 +50,11 @@ class MctMultipler(Qubrick):
 
     Requires that size of result register is equal to sum of sizes of input
     registers.
+
+    Implementation of the multiplier presented in paper:
+        "T-count Optimized Design of Quantum Integer Multiplication",
+        Edgard Muñoz-Coreas, Himanshu Thapliyal, 2017.
+        https://arxiv.org/abs/1706.05113
     """
 
     def _compute(self, a: QUInt, b: QUInt, result: QUInt) -> None:

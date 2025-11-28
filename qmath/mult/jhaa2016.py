@@ -1,10 +1,3 @@
-"""
-Implementation of adder and multiplier presented in the paper:
-   Ancilla-Input and Garbage-Output Optimized Design of a Reversible Quantum Integer Multiplier
-   Jayashree HV, Himanshu Thapliyal, Hamid R. Arabnia, V K Agrawal, 2016.
-   https://arxiv.org/abs/1608.01228
-"""
-
 from psiqworkbench import QUInt
 from psiqworkbench.interoperability import implements
 from psiqworkbench.qubricks import Qubrick
@@ -35,6 +28,12 @@ class JhhaMultipler(Qubrick):
 
     Requires that registers a and b are of the same size n, and register
     `result` is of size 2n.
+
+    Implementation of the multiplier presented in the paper:
+        "Ancilla-Input and Garbage-Output Optimized Design of a Reversible
+        Quantum Integer Multiplier",
+        Jayashree HV, Himanshu Thapliyal, Hamid R. Arabnia, V K Agrawal, 2016.
+        https://arxiv.org/abs/1608.01228
     """
 
     def _compute(self, a: QUInt, b: QUInt, result: QUInt) -> None:
