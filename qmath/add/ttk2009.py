@@ -58,8 +58,7 @@ class TTKAdder(Qubrick):
     def _compute(self, lhs: QUInt, rhs: QUInt, ctrl: Optional[Qubits] = None):
         rhs_len = len(rhs)
         lhs_len = len(lhs)
-
-        assert lhs_len >= rhs_len, "Register `lhs` must be longer than register `rhs`."
+        assert lhs_len >= rhs_len, "Register `rhs` cannot be longer than register `lhs`."
         assert rhs_len >= 1, "Registers `rhs` and `lhs` must contain at least one qubit."
 
         if rhs_len == lhs_len:

@@ -107,7 +107,7 @@ class CDKMAdder(Qubrick):
 
     def _compute(self, lhs: QUInt, rhs: QUInt, ctrl: Optional[Qubits] = None):
         self.ctrl = ctrl
-        assert len(lhs) >= len(rhs), "Register `lhs` must be longer than register `rhs`."
+        assert len(lhs) >= len(rhs), "Register `rhs` cannot be longer than register `lhs`."
         n = len(rhs)
         if len(lhs) == n:
             # Addition modulo 2^n.

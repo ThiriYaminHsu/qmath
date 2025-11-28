@@ -14,9 +14,12 @@ from qmath.add import CDKMAdder, TTKAdder
 #   * Fills them with random numbers.
 #   * Calls adder to compute x += y.
 #   * Check that result is computed correctly modulo 2**n1.
-def _check_adder(adder: Adder, n1: int, n2: int, num_trials=5):
+def _check_adder(adder: Adder, n1: int, n2: int, num_trials=5, use_bit_sim=True):
     assert n1 >= n2
-    qc = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
+    if use_bit_sim:
+        qc = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
+    else:
+        qc = QPU()
     qc.reset(2 * n1 + n2)
 
     qs_x = QUInt(n1, "x", qc)
@@ -71,6 +74,12 @@ def test_adder_gidney():
 
 def test_adder_gidney_controlled():
     _check_controlled_adder(qbk.GidneyAdd(), 3, 3)
+
+
+def test_qft_add():
+    # Due to bug in QFTAdd (tmp_anc qubit not released), this fails with
+    # num_trials > 3.
+    _check_adder(qbk.QFTAdd(), 3, 3, use_bit_sim=False, num_trials=3)
 
 
 @pytest.mark.parametrize("num_bits", [(1, 1), (2, 1), (2, 2), (8, 8), (10, 10), (10, 9), (10, 5), (20, 20)])
