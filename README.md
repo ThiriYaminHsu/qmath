@@ -43,4 +43,36 @@ algorithm was described, with reference to the paper at the top.
 
 # Development
 
-Testing, formatting, pre-commit hooks, CI - TODO.
+### Setup
+
+Clone repository into /home/coder/projects in PsiQDE instance. Then:
+
+```
+cd /home/coder/projects/qmath
+python -m pip install .[dev]  # Install dependencies.
+pre-commit install            # Install pre-commit hooks.
+pytest                        # Run tests, make sure they pass.
+```
+
+### Testing
+
+We use pytest for testing. To run all tests, run `pytest`. You can also
+run tests in a single file, e.g. `pytest ./qmath/add/adders_test.py`.
+
+### Formatting
+
+This repository uses [Black formatter](https://github.com/psf/black). 
+Recommended setup for VSCode is:
+* Install extension "[Black Formatter](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter)".
+* Use Ctrl+Shift+I to format file.
+
+### Pre-commit hooks
+
+This repository uses pre-commit hooks to run formatter and all tests. 
+* If your commit fails because
+
+
+This is necessary because we currently cannot run tests on Gihub Actions.
+
+In the future, if tests will take too long, we will run allow marking some of 
+them as "slow", and run only "fast" tests on pre-commit hook.
