@@ -84,7 +84,7 @@ def _add_optimized(qbk: Qubrick, a: list[Qubit], b: list[Qubit], z: Qubit):
 
 
 @implements(Adder[QUInt, QUInt])
-class CdkmAdder(Qubrick):
+class CDKMAdder(Qubrick):
     """Computes lhs += rhs.
 
     Sizes of registers must match or lhs must be 1 qubit longer.

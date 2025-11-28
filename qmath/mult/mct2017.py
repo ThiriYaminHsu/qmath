@@ -45,7 +45,7 @@ def _ctrl_add(ctrl: Qubit, a: list[Qubit], b: list[Qubit], z0: Qubit, z1: Qubit)
 
 
 @implements(Multiplier)
-class MctMultipler(Qubrick):
+class MCTMultipler(Qubrick):
     """Computes result+=a*b (mod 2^(2n)).
 
     Requires that size of result register is equal to sum of sizes of input

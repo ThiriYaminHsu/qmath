@@ -3,7 +3,7 @@ import random
 import pytest
 from psiqworkbench import QPU, QUInt
 
-from qmath.mult import JhhaMultipler, MctMultipler, Multiplier
+from qmath.mult import JHHAMultipler, MCTMultipler, Multiplier
 
 
 def _check_multiplier(multiplier: Multiplier, num_bits):
@@ -26,9 +26,9 @@ def _check_multiplier(multiplier: Multiplier, num_bits):
 
 @pytest.mark.parametrize("num_bits", [1, 2, 5, 10])
 def test_mct_multiplier(num_bits: int):
-    _check_multiplier(MctMultipler(), num_bits)
+    _check_multiplier(MCTMultipler(), num_bits)
 
 
 @pytest.mark.parametrize("num_bits", [1, 2, 5, 10])
 def test_jhha_multiplier(num_bits: int):
-    _check_multiplier(JhhaMultipler(num_bits), 10)
+    _check_multiplier(JHHAMultipler(num_bits), 10)

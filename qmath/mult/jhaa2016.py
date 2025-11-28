@@ -23,7 +23,7 @@ def _add_nop(p: list[Qubit], b: list[Qubit], am: Qubit):
 
 
 @implements(Multiplier)
-class JhhaMultipler(Qubrick):
+class JHHAMultipler(Qubrick):
     """Computes result+=a*b (mod 2^(2n)).
 
     Requires that registers a and b are of the same size n, and register
