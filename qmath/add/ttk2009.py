@@ -64,16 +64,14 @@ class TTKAdder(Qubrick):
 
         if rhs_len == lhs_len:
             if rhs_len > 1:
-                ApplyOuterTTKAdder().compute(rhs, lhs)
-                ApplyInnerTTKAdderNoCarry().compute(rhs, lhs)
-                ApplyOuterTTKAdder().compute(rhs, lhs, dagger=True)
+                with ApplyOuterTTKAdder().computed(rhs, lhs):
+                    ApplyInnerTTKAdderNoCarry().compute(rhs, lhs)
             cnot(rhs[0], lhs[0])
         elif rhs_len + 1 == lhs_len:
             if rhs_len > 1:
                 cnot(rhs[rhs_len - 1], lhs[lhs_len - 1])
-                ApplyOuterTTKAdder().compute(rhs, lhs)
-                ApplyInnerTTKAdderWithCarry().compute(rhs, lhs)
-                ApplyOuterTTKAdder().compute(rhs, lhs, dagger=True)
+                with ApplyOuterTTKAdder().computed(rhs, lhs):
+                    ApplyInnerTTKAdderWithCarry().compute(rhs, lhs)
             else:
                 ccnot(rhs[0], lhs[0], lhs[1])
             cnot(rhs[0], lhs[0])
