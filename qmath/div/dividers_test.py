@@ -4,6 +4,7 @@ import pytest
 from psiqworkbench import QPU, QUInt
 
 from qmath.div import TMVHDivider
+from qmath.add import TTKAdder, CDKMAdder
 
 
 def _check_divider(divider: TMVHDivider, num_bits: tuple[int, int], num_trials=2):
@@ -36,3 +37,8 @@ def test_tmvh_divider_restoring(num_bits: tuple[int, int]):
 @pytest.mark.parametrize("num_bits", [(1, 1), (2, 1), (2, 2), (10, 10), (10, 9), (10, 5)])
 def test_tmvh_divider_non_restoring(num_bits: tuple[int, int]):
     _check_divider(TMVHDivider(restoring=False), num_bits)
+
+
+def test_tmvh_different_adders():
+    _check_divider(TMVHDivider(restoring=False, adder=TTKAdder()), (10, 10))
+    _check_divider(TMVHDivider(restoring=True, adder=TTKAdder()), (10, 10))
