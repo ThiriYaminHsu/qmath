@@ -5,7 +5,6 @@ from psiqworkbench.interfaces import Adder
 from psiqworkbench.interoperability import implements
 from psiqworkbench.qubricks import Qubrick
 
-from ..utils.gates import ccnot, cnot
 from ..utils.padding import padded
 
 
@@ -26,10 +25,10 @@ class CDKMAdder(Qubrick):
         self.optimized = optimized
 
     def _cnot(self, a: Qubits, b: Qubits):
-        cnot(a, b, ctrl=self.ctrl)
+        b.x(a | self.ctrl)
 
     def _ccnot(self, a: Qubits, b: Qubits, c: Qubits):
-        ccnot(a, b, c, ctrl=self.ctrl)
+        c.x(a | b | self.ctrl)
 
     def _maj(self, a: Qubits, b: Qubits, c: Qubits):
         self._cnot(c, b)
@@ -70,7 +69,7 @@ class CDKMAdder(Qubrick):
         c = self.alloc_temp_qreg(1, "c")
 
         for i in range(1, n):
-            cnot(a[i], b[i])
+            b[i].x(a[i])
         self._cnot(a[1], c)
         self._ccnot(a[0], b[0], c)
         self._cnot(a[2], a[1])
@@ -101,7 +100,7 @@ class CDKMAdder(Qubrick):
         self._cnot(a[1], c)
         self._cnot(a[0], b[0])
         for i in range(1, n):
-            cnot(a[i], b[i])
+            b[i].x(a[i])
 
         c.release()
 

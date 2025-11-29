@@ -5,7 +5,6 @@ from psiqworkbench.interfaces import Adder
 from psiqworkbench.interoperability import implements
 from psiqworkbench.qubricks import Qubrick
 
-from ..utils.gates import ccnot, cnot
 from ..utils.padding import padded
 
 
@@ -13,19 +12,19 @@ class ApplyOuterTTKAdder(Qubrick):
     def _compute(self, rhs: Qubits, lhs: Qubits, ctrl: Optional[Qubits] = None):
         assert len(rhs) <= len(lhs), "Input register lhs must be at least as long as rhs."
         for i in range(1, len(rhs)):
-            cnot(rhs[i], lhs[i], ctrl=ctrl)
+            lhs[i].x(rhs[i] | ctrl)
         for i in range(len(rhs) - 2, 0, -1):
-            cnot(rhs[i], rhs[i + 1], ctrl=ctrl)
+            rhs[i + 1].x(rhs[i] | ctrl)
 
 
 class ApplyInnerTTKAdderNoCarry(Qubrick):
     def _compute(self, rhs: Qubits, lhs: Qubits, ctrl: Optional[Qubits] = None):
         assert len(rhs) == len(lhs)
         for idx in range(len(rhs) - 1):
-            ccnot(rhs[idx], lhs[idx], rhs[idx + 1])
+            rhs[idx + 1].x(rhs[idx] | lhs[idx])
         for idx in range(len(rhs) - 1, 0, -1):
-            cnot(rhs[idx], lhs[idx], ctrl=ctrl)
-            ccnot(rhs[idx - 1], lhs[idx - 1], rhs[idx])
+            lhs[idx].x(rhs[idx] | ctrl)
+            rhs[idx].x(rhs[idx - 1] | lhs[idx - 1])
 
 
 class ApplyInnerTTKAdderWithCarry(Qubrick):
@@ -34,11 +33,11 @@ class ApplyInnerTTKAdderWithCarry(Qubrick):
         assert n + 1 == len(lhs), "lhs must be one qubit longer then rhs."
         assert n > 0, "rhs should not be empty."
         for idx in range(n - 1):
-            ccnot(rhs[idx], lhs[idx], rhs[idx + 1])
-        ccnot(rhs[n - 1], lhs[n - 1], lhs[n], ctrl=ctrl)
+            rhs[idx + 1].x(rhs[idx] | lhs[idx])
+        lhs[n].x(rhs[n - 1] | lhs[n - 1] | ctrl)
         for idx in range(n - 1, 0, -1):
-            cnot(rhs[idx], lhs[idx], ctrl=ctrl)
-            ccnot(rhs[idx - 1], lhs[idx - 1], rhs[idx])
+            lhs[idx].x(rhs[idx] | ctrl)
+            rhs[idx].x(rhs[idx - 1] | lhs[idx - 1])
 
 
 @implements(Adder[QUInt, QUInt])
@@ -65,15 +64,15 @@ class TTKAdder(Qubrick):
             if rhs_len > 1:
                 with ApplyOuterTTKAdder().computed(rhs, lhs, ctrl=ctrl):
                     ApplyInnerTTKAdderNoCarry().compute(rhs, lhs, ctrl=ctrl)
-            cnot(rhs[0], lhs[0], ctrl=ctrl)
+            lhs[0].x(rhs[0] | ctrl)
         elif rhs_len + 1 == lhs_len:
             if rhs_len > 1:
-                cnot(rhs[rhs_len - 1], lhs[lhs_len - 1], ctrl=ctrl)
+                lhs[lhs_len - 1].x(rhs[rhs_len - 1] | ctrl)
                 with ApplyOuterTTKAdder().computed(rhs, lhs, ctrl=ctrl):
                     ApplyInnerTTKAdderWithCarry().compute(rhs, lhs, ctrl=ctrl)
             else:
-                ccnot(rhs[0], lhs[0], lhs[1], ctrl=ctrl)
-            cnot(rhs[0], lhs[0], ctrl=ctrl)
+                lhs[1].x(rhs[0] | lhs[0] | ctrl)
+            lhs[0].x(rhs[0] | ctrl)
         else:
             assert rhs_len + 2 <= lhs_len
             # Pad rhs so that its length is one qubit shorter than lhs.
