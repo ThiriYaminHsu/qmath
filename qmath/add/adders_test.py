@@ -31,6 +31,7 @@ def _check_adder(adder: Adder, n1: int, n2: int, num_trials=5, use_bit_sim=True)
         qs_y.write(y)
         adder.compute(qs_x, qs_y)
         assert qs_x.read() == (x + y) % (2**n1)
+        adder.uncompute()
 
 
 def _check_controlled_adder(adder: Adder, n1: int, n2: int, num_trials=5):
@@ -77,9 +78,7 @@ def test_adder_gidney_controlled():
 
 
 def test_qft_add():
-    # Due to bug in QFTAdd (tmp_anc qubit not released), this fails with
-    # num_trials > 3.
-    _check_adder(qbk.QFTAdd(), 3, 3, use_bit_sim=False, num_trials=3)
+    _check_adder(qbk.QFTAdd(), 3, 3, use_bit_sim=False)
 
 
 @pytest.mark.parametrize("num_bits", [(1, 1), (2, 1), (2, 2), (8, 8), (10, 10), (10, 9), (10, 5), (20, 20)])
