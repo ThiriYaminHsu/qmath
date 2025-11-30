@@ -61,3 +61,29 @@ def test_eval_sin():
         func.compute(qx)
         result = func.get_result_qreg().read()
         assert np.abs(result - np.sin(x)) < 1e-4
+
+
+def test_eval_sin_odd():
+    qpu = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
+    func = EvalFunctionPPA(np.sin, interval=(-1, 1), degree=2, error_tol=1e-3, is_odd=True)
+    assert len(func.poly.pieces) == 1
+    for x in [0.5]:
+        qpu.reset(500)
+        qx = QFixed(12, name="qx", radix=10, qpu=qpu)
+        qx.write(x)
+        func.compute(qx)
+        result = func.get_result_qreg().read()
+        assert np.abs(result - np.sin(x)) < 1e-3
+
+
+def test_eval_cos_even():
+    qpu = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
+    func = EvalFunctionPPA(np.cos, interval=(-1, 1), degree=2, error_tol=1e-3, is_even=True)
+    assert len(func.poly.pieces) == 1
+    for x in [0.5]:
+        qpu.reset(500)
+        qx = QFixed(12, name="qx", radix=10, qpu=qpu)
+        qx.write(x)
+        func.compute(qx)
+        result = func.get_result_qreg().read()
+        assert np.abs(result - np.cos(x)) < 1e-3

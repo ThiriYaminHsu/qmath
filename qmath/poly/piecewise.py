@@ -128,14 +128,38 @@ class EvalPiecewisePolynomial(Qubrick):
         self.set_result_qreg(ans)
 
 
+def _square_interval(interval: tuple[float, float]) -> tuple[float, float]:
+    a, b = interval
+    assert a < b
+    if b < 0:
+        return (b**2, a**2)
+    elif a > 0:
+        return (a**2, b**2)
+    else:
+        return (1e-30, max(abs(a), abs(b)) ** 2)
+
+
 class EvalFunctionPPA(Qubrick):
     """Evaluates function using Piecewise Polynomial Approximation.
+
+    For even functions can optionally use a trick where only polynomial with
+    even coefficients are used (e.g. f(x)=a_0+a_2*x^2+a_4*x^4). If this option
+    is enabled (`is_even=True`), f is ssumed to be even. Then, the function
+    g(x)=f(sqrt(x)) will be approximated with a polynomial of degree `degree`,
+    and f(x) will be evaulated as f(x)=g(x^2). This way, if effect f(x) is
+    approximated by polynomial of degree `2*degree`.
+
+    For odd functions can do similar trick. If `is_odd=True`, will apprximate
+    function g(x)=f(sqrt(x))/sqrt(x), and evaluate f(x)=x*g(x^2). Effective
+    polynomial degree is `2*degree+1`.
 
     Arguments:
         f - function to approximate.
         interval - interval on which to approximate.
         degree - degree of polynomials used to approximate the function.
         error_tol - maximal error between true function and its apprimxation.
+        is_even - whether to apply "even trick".
+        is_odd - whether to apply "odd trick".
     """
 
     def __init__(
@@ -145,12 +169,41 @@ class EvalFunctionPPA(Qubrick):
         interval: tuple[float, float],
         degree: int,
         error_tol: float,
+        is_even: bool = False,
+        is_odd: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.poly = remez_piecewise(f, interval, degree, error_tol)
+        self.is_even = is_even
+        self.is_odd = is_odd
+        if is_even:
+            assert not is_odd, "Cannot use both odd and even trick."
+            g = lambda t: f(np.sqrt(t))
+            new_interval = _square_interval(interval)
+            self.poly = remez_piecewise(g, new_interval, degree, error_tol / 2)
+        elif is_odd:
+            g = lambda t: f(np.sqrt(t)) / np.sqrt(t)
+            new_interval = _square_interval(interval)
+            self.poly = remez_piecewise(g, new_interval, degree, error_tol / 2)
+        else:
+            self.poly = remez_piecewise(f, interval, degree, error_tol)
 
     def _compute(self, x: QFixed):
         epp = EvalPiecewisePolynomial(self.poly)
-        epp.compute(x)
-        self.set_result_qreg(epp.get_result_qreg())
+
+        if self.is_odd or self.is_even:
+            # x_sq := x^2 (TODO: use qbk.Square).
+            x_sq = QFixed(self.alloc_temp_qreg(x.num_qubits, "x_sq"), radix=x.radix)
+            qbk.GidneyMultiplyAdd().compute(x_sq, x, x)
+            epp.compute(x_sq)
+            if self.is_even:
+                # Return poly(x_sq).
+                self.set_result_qreg(epp.get_result_qreg())
+            else:
+                # Return ans := poly(x_sq)*x.
+                ans = QFixed(self.alloc_temp_qreg(x.num_qubits, "ans"), radix=x.radix)
+                qbk.GidneyMultiplyAdd().compute(ans, epp.get_result_qreg(), x)
+                self.set_result_qreg(ans)
+        else:
+            epp.compute(x)
+            self.set_result_qreg(epp.get_result_qreg())
