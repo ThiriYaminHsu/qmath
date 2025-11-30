@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from psiqworkbench import QPU, QFixed, QUInt
 
-from qmath.poly import WritePieceNumber
+from qmath.poly import WritePieceNumber, EvalPiecewisePolynomial, PiecewisePolynomial, Piece, EvalFunctionPPA
 
 
 def test_write_piece_number():
@@ -26,3 +26,22 @@ def test_write_piece_number():
         _check(x - 0.1, i)
         _check(x, i)
         _check(x + 0.1, i + 1)
+
+
+def test_eval_piecewise_polynomial():
+    poly = PiecewisePolynomial(
+        [
+            Piece(-1, 0, [1, 1, 1, 0]),
+            Piece(0, 1.5, [1, -2, -2.5, 0]),
+            Piece(1.5, 2.5, [5.875, -3, -5.5, 1]),
+        ]
+    )
+    qpu = QPU(filters=[">>64bit>>", ">>bit-sim>>", ">>buffer>>", ">>capture>>"])
+    for x in [-1, 1.5, 2]:
+        qpu.reset(150)
+        qx = QFixed(8, name="qx", radix=3, qpu=qpu)
+        qx.write(x)
+        func = EvalPiecewisePolynomial(poly)
+        func.compute(qx)
+        result = func.get_result_qreg().read()
+        assert result == poly.eval(x)

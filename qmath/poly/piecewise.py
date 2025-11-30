@@ -1,5 +1,12 @@
+"""Evaluating arbitrary functions using Piecewise Polynomial Approximation.
+
+Reference:
+    Thomas Haner, Martin Roetteler, Krysta M. Svore.
+    Optimizing Quantum Circuits for Arithmetic. 2018.
+    https://arxiv.org/abs/1805.12445
+"""
+
 import math
-from dataclasses import dataclass
 from typing import Callable
 
 import numpy as np
@@ -10,7 +17,7 @@ from psiqworkbench.qubricks import Qubrick
 from ..utils.gates import write_uint
 from ..utils.lookup import TableLookup
 from .horner import HornerScheme
-from .remez import remez_piecewise
+from .remez import remez_piecewise, PiecewisePolynomial
 
 
 # Converts signed real number to unsigned integer whose binary representation is
@@ -48,7 +55,7 @@ class WritePieceNumber(Qubrick):
             comparator.uncompute()
 
 
-class EvalFunctionPPA(Qubrick):
+class EvalPiecewisePolynomial(Qubrick):
     """Evaluates function using Piecewise Polynomial Approximation.
 
     Arguments:
@@ -63,17 +70,9 @@ class EvalFunctionPPA(Qubrick):
         https://arxiv.org/abs/1805.12445
     """
 
-    def __init__(
-        self,
-        f: Callable[[float], float],
-        *,
-        interval: tuple[float, float],
-        degree: int,
-        error_tol: float,
-        **kwargs,
-    ):
+    def __init__(self, poly: PiecewisePolynomial, **kwargs):
         super().__init__(**kwargs)
-        self.poly = remez_piecewise(f, interval, degree, error_tol)
+        self.poly = poly
         self.num_pieces = len(self.poly.pieces)
         self.deg = max(len(p.coefs) for p in self.poly.pieces) - 1
 
@@ -82,8 +81,7 @@ class EvalFunctionPPA(Qubrick):
         # Figure 1 in the paper.
         # All x to the left of piece 0 will fall into piece 0.
         # All x to the right of the last piece will fall into the last piece.
-        num_pieces = len(self.poly.pieces)
-        label_size = int(math.ceil(math.log2(num_pieces)))
+        label_size = int(math.ceil(math.log2(self.num_pieces)))
         l = QUInt(self.alloc_temp_qreg(label_size, "l"))
         points = [self.poly.pieces[i].b for i in range(self.num_pieces - 1)]
         WritePieceNumber().compute(x, l, points)
@@ -107,6 +105,7 @@ class EvalFunctionPPA(Qubrick):
 
         # Allocate register for the answer and write highest coefficient there.
         ans = QFixed(self.alloc_temp_qreg(x.num_qubits, "ans"), radix=x.radix)
+        ans.write(0)  # todo:remove
         TableLookup().compute(l, QUInt(ans), a[:, self.deg])
 
         # Allocate register to write coefficients.
@@ -116,15 +115,42 @@ class EvalFunctionPPA(Qubrick):
         # Parallel Horner scheme.
         for i in range(self.deg - 1, -1, -1):
             # Write coefficients to register qa.
-            coefs = a[:, i]
-            if i < self.deg - 1:
-                coefs ^= a[:, i + 1]
+            coefs = a[:, i] ^ (0 if i == self.deg - 1 else a[:, i + 1])
             TableLookup().compute(l, q_coefs_as_uint, coefs)
 
             # Compute ans := ans * x + coef.
             next_ans = QFixed(self.alloc_temp_qreg(x.num_qubits, f"ans{i}"), radix=x.radix)
+            next_ans.write(0)  # todo:remove
             qbk.GidneyMultiplyAdd().compute(next_ans, ans, x)
             qbk.GidneyAdd().compute(next_ans, q_coefs)
             ans = next_ans
 
         self.set_result_qreg(ans)
+
+
+class EvalFunctionPPA(Qubrick):
+    """Evaluates function using Piecewise Polynomial Approximation.
+
+    Arguments:
+        f - function to approximate.
+        interval - interval on which to approximate.
+        degree - degree of polynomials used to approximate the function.
+        error_tol - maximal error between true function and its apprimxation.
+    """
+
+    def __init__(
+        self,
+        f: Callable[[float], float],
+        *,
+        interval: tuple[float, float],
+        degree: int,
+        error_tol: float,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.poly = remez_piecewise(f, interval, degree, error_tol)
+
+    def _compute(self, x: QFixed):
+        epp = EvalPiecewisePolynomial(self.poly)
+        epp.compute(x)
+        self.set_result_qreg(epp.get_result_qreg())
