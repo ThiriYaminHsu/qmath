@@ -19,7 +19,7 @@ class HornerScheme(Qubrick):
         def linear(a: QFixed, b: float) -> QFixed:
             result = QFixed(self.alloc_temp_qreg(x.num_qubits, "a"), radix=x.radix)
             qbk.GidneyMultiplyAdd().compute(result, a, x)
-            if abs(b) > 1e-15:
+            if abs(b) > 2 ** (-x.radix - 1):
                 qbk.GidneyAdd().compute(result, b)
             return result
 
