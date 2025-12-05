@@ -4,6 +4,7 @@ import numpy as np
 import psiqworkbench.qubricks as qbk
 import pytest
 from psiqworkbench import QPU, Qubits, QUInt
+from psiqworkbench.filter_presets import BIT_DEFAULT
 from psiqworkbench.interfaces import Adder
 
 from qmath.add import CDKMAdder, TTKAdder
@@ -17,7 +18,7 @@ from qmath.add import CDKMAdder, TTKAdder
 def _check_adder(adder: Adder, n1: int, n2: int, num_trials=5, use_bit_sim=True):
     assert n1 >= n2
     if use_bit_sim:
-        qc = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
+        qc = QPU(filters=BIT_DEFAULT)
     else:
         qc = QPU()
     qc.reset(2 * n1 + n2)

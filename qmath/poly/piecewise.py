@@ -9,6 +9,7 @@ Reference:
 import math
 from typing import Callable
 
+
 import numpy as np
 import psiqworkbench.qubricks as qbk
 from psiqworkbench import QFixed, QUInt, Qubits
@@ -188,8 +189,9 @@ class EvalFunctionPPA(Qubrick):
         else:
             self.poly = remez_piecewise(f, interval, degree, error_tol)
 
-    # TODO: qbk.Square instead.
+    # TODO: use qbk.Square instead.
     def _square(self, x: QFixed) -> QFixed:
+        """Computes square of given register."""
         x_reg = Qubits(x)
         x_copy_reg: Qubits = self.alloc_temp_qreg(x.num_qubits, "x_copy")
         x_sq = QFixed(self.alloc_temp_qreg(x.num_qubits, "x_sq"), radix=x.radix)

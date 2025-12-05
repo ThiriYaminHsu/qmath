@@ -6,6 +6,7 @@ import random
 import numpy as np
 import pytest
 from psiqworkbench import QPU, QFixed
+from psiqworkbench.filter_presets import BIT_DEFAULT
 
 from qmath.poly import HornerScheme
 
@@ -14,7 +15,7 @@ RUN_SLOW_TESTS = os.getenv("RUN_SLOW_TESTS") == "1"
 
 @pytest.mark.parametrize("coefs", [[2], [-2, 3.5], [3.5, 2.5, -1]])
 def test_horner_linear(coefs: list[float]):
-    qpu = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
+    qpu = QPU(filters=BIT_DEFAULT)
     qpu.reset(100)
     hs = HornerScheme(coefs)
     qx = QFixed(8, name="qx", radix=4, qpu=qpu)

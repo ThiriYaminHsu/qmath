@@ -4,6 +4,7 @@ import random
 import numpy as np
 import pytest
 from psiqworkbench import QPU, QFixed, QUInt
+from psiqworkbench.filter_presets import BIT_DEFAULT
 
 from qmath.poly import WritePieceNumber, EvalPiecewisePolynomial, PiecewisePolynomial, Piece, EvalFunctionPPA
 
@@ -11,7 +12,7 @@ RUN_SLOW_TESTS = os.getenv("RUN_SLOW_TESTS") == "1"
 
 
 def test_write_piece_number():
-    qpu = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
+    qpu = QPU(filters=BIT_DEFAULT)
     qpu.reset(30)
     qx = QFixed(10, name="qx", radix=5, qpu=qpu)
     target = QUInt(3, qpu=qpu)
@@ -38,7 +39,7 @@ def test_eval_piecewise_polynomial():
             Piece(1.5, 2.5, [5.875, -3, -5.5, 1]),
         ]
     )
-    qpu = QPU(filters=[">>64bit>>", ">>bit-sim>>", ">>buffer>>", ">>capture>>"])
+    qpu = QPU(filters=BIT_DEFAULT)
     for x in [-1, 1.5, 2]:
         qpu.reset(150)
         qx = QFixed(8, name="qx", radix=3, qpu=qpu)
@@ -51,7 +52,7 @@ def test_eval_piecewise_polynomial():
 
 @pytest.mark.skipif(not RUN_SLOW_TESTS, reason="slow test")
 def test_eval_sin():
-    qpu = QPU(filters=[">>64bit>>", ">>bit-sim>>", ">>buffer>>", ">>capture>>"])
+    qpu = QPU(filters=BIT_DEFAULT)
     func = EvalFunctionPPA(np.sin, interval=(-1, 1), degree=3, error_tol=1e-4)
 
     for x in [0.5, 0.8, 1.0]:
@@ -64,7 +65,7 @@ def test_eval_sin():
 
 
 def test_eval_sin_odd():
-    qpu = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
+    qpu = QPU(filters=BIT_DEFAULT)
     func = EvalFunctionPPA(np.sin, interval=(-1, 1), degree=2, error_tol=1e-3, is_odd=True)
     assert len(func.poly.pieces) == 1
     for x in [0.5]:
@@ -77,7 +78,7 @@ def test_eval_sin_odd():
 
 
 def test_eval_cos_even():
-    qpu = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
+    qpu = QPU(filters=BIT_DEFAULT)
     func = EvalFunctionPPA(np.cos, interval=(-1, 1), degree=2, error_tol=1e-3, is_even=True)
     assert len(func.poly.pieces) == 1
     for x in [0.5]:

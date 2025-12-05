@@ -2,15 +2,16 @@ import random
 
 import pytest
 from psiqworkbench import QPU, QUInt
+from psiqworkbench.filter_presets import BIT_DEFAULT
 
+from qmath.add import CDKMAdder, TTKAdder
 from qmath.div import TMVHDivider
-from qmath.add import TTKAdder, CDKMAdder
 
 
 def _check_divider(divider: TMVHDivider, num_bits: tuple[int, int], num_trials=2):
     na, nb = num_bits
     assert 0 < nb <= na
-    qc = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
+    qc = QPU(filters=BIT_DEFAULT)
     qc.reset(4 * na + 5)
 
     qs_a = QUInt(na, "a", qc)

@@ -2,12 +2,13 @@ import random
 
 import pytest
 from psiqworkbench import QPU, QUInt
+from psiqworkbench.filter_presets import BIT_DEFAULT
 
 from qmath.mult import JHHAMultipler, MCTMultipler, Multiplier
 
 
 def _check_multiplier(multiplier: Multiplier, num_bits, num_trials=5):
-    qc = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
+    qc = QPU(filters=BIT_DEFAULT)
     qc.reset(4 * num_bits + 1)
 
     a = QUInt(num_bits, "a", qc)
