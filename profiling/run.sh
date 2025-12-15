@@ -1,0 +1,1 @@
+py-spy record -o profiling/profile.json --format speedscope -- python profiling/code.py

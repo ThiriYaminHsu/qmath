@@ -78,3 +78,12 @@ This is necessary because we currently cannot run tests on Gihub Actions.
 
 In the future, if tests will take too long, we will allow marking some of them 
 as "slow", and run only "fast" tests on pre-commit hook.
+
+
+### Profiling
+
+To profile a piece of code:
+* Put the code you want to profile in profiling/code.py.
+* Run `./profiling/run.sh`
+* Download file profiling/profile.json locally (right-click -> Download...).
+* Go to https://www.speedscope.app/ and upload profile.json.
