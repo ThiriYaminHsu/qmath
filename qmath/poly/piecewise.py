@@ -19,6 +19,7 @@ from ..utils.gates import write_uint, parallel_cnot
 from ..utils.lookup import TableLookup
 from .horner import HornerScheme
 from .remez import remez_piecewise, PiecewisePolynomial
+from ..mult.square import square
 
 
 # Converts signed real number to unsigned integer whose binary representation is
@@ -106,7 +107,6 @@ class EvalPiecewisePolynomial(Qubrick):
 
         # Allocate register for the answer and write highest coefficient there.
         ans = QFixed(self.alloc_temp_qreg(x.num_qubits, "ans"), radix=x.radix)
-        ans.write(0)  # todo:remove
         TableLookup().compute(l, QUInt(ans), a[:, self.deg])
 
         # Allocate register to write coefficients.
@@ -189,24 +189,11 @@ class EvalFunctionPPA(Qubrick):
         else:
             self.poly = remez_piecewise(f, interval, degree, error_tol)
 
-    # TODO: use qbk.Square instead.
-    def _square(self, x: QFixed) -> QFixed:
-        """Computes square of given register."""
-        x_reg = Qubits(x)
-        x_copy_reg: Qubits = self.alloc_temp_qreg(x.num_qubits, "x_copy")
-        x_sq = QFixed(self.alloc_temp_qreg(x.num_qubits, "x_sq"), radix=x.radix)
-        x_copy = QFixed(x_copy_reg, radix=x.radix)
-
-        parallel_cnot(x_reg, x_copy_reg)
-        qbk.GidneyMultiplyAdd().compute(x_sq, x, x_copy)
-        parallel_cnot(x_reg, x_copy_reg)
-        x_copy_reg.release()
-        return x_sq
-
     def _compute(self, x: QFixed):
         epp = EvalPiecewisePolynomial(self.poly)
         if self.is_odd or self.is_even:
-            x_sq = self._square(x)
+            x_sq = QFixed(self.alloc_temp_qreg(x.num_qubits, "x_sq"), radix=x.radix)
+            square(x, x_sq, self)
             epp.compute(x_sq)
             if self.is_even:
                 # Return poly(x^2).
