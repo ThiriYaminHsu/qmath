@@ -5,6 +5,7 @@ from psiqworkbench.qubricks import Qubrick
 from ..mult.square import square
 
 
+# TODO: implement more efficiently and move to common.
 def negate(x: QFixed):
     x_as_int = QInt(x)
     x_as_int.x()
