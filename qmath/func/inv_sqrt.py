@@ -2,24 +2,8 @@ import psiqworkbench.qubricks as qbk
 from psiqworkbench import QFixed, QInt, QUInt, Qubits
 from psiqworkbench.qubricks import Qubrick
 
-from ..mult.square import Square
-
-
-# TODO: implement more efficiently and move to common.
-def negate(x: QFixed):
-    x_as_int = QInt(x)
-    x_as_int.x()
-    qbk.GidneyAdd().compute(x_as_int, 1)
-
-
-# TODO: implement more efficiently and move to common.
-# Warning: messes up rhs.
-def subtract(lhs: QFixed, rhs: QFixed):
-    """Computes lhs-= rhs."""
-    assert lhs.num_qubits == lhs.num_qubits
-    assert lhs.radix == rhs.radix
-    negate(rhs)
-    qbk.GidneyAdd().compute(lhs, rhs)
+from ..mult import Square
+from ..add import Subtract
 
 
 class _InitialGuess(Qubrick):
@@ -71,7 +55,7 @@ class _NewtonIteration(Qubrick):
         Square().compute(x0, t1)  # t1 := x0^2.
         qbk.GidneyMultiplyAdd().compute(t2, a, t1)  # t2 := a*x0^2.
         t3.write(c)
-        subtract(t3, t2)  # t3 := c - a*x0^2
+        Subtract().compute(t3, t2)  # t3 := c - a*x0^2
         qbk.GidneyMultiplyAdd().compute(x1, x0, t3)  # x1 := x0*(c-a*x0^2).
 
 
