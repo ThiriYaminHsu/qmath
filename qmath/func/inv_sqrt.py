@@ -103,12 +103,12 @@ class InverseSquareRoot(Qubrick):
         a_half = QFixed(a, radix=a.radix + 1)
         n = self.num_iterations
         x = [QFixed(self.alloc_temp_qreg(a.num_qubits, f"x_{i}"), radix=a.radix) for i in range(n + 1)]
-        print("a=", a.read())
+        # print("a=", a.read())
         _InitialGuess().compute(a, x[0])
-        print("x0=", x[0].read())
+        # print("x0=", x[0].read())
         for i in range(1, n + 1):
             c = 1.615 if i == 0 else 1.5
             _NewtonIteration().compute(x[i - 1], x[i], a_half, c=c)
-            print(f"x{i}=", x[i].read())
+            # print(f"x{i}=", x[i].read())
 
         self.set_result_qreg(x[n])
