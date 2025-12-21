@@ -1,9 +1,6 @@
-import numpy as np
 import psiqworkbench.qubricks as qbk
-from psiqworkbench import QFixed, QUInt, Qubits, QInt
+from psiqworkbench import QFixed, QInt
 from psiqworkbench.qubricks import Qubrick
-
-from ..utils.gates import parallel_cnot
 
 
 class Subtract(Qubrick):
@@ -13,7 +10,7 @@ class Subtract(Qubrick):
         x_as_int.x()
         qbk.GidneyAdd().compute(x_as_int, 1)
 
-    # TODO: implement more efficiently.
+    # TODO: implement more efficiently.i
     # Warning: messes up rhs.
     def _compute(self, lhs: QFixed, rhs: QFixed):
         """Computes lhs-= rhs."""
