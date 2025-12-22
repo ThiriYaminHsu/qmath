@@ -19,13 +19,13 @@ class AbsInPlace(Qubrick):
 class SquareIteration(Qubrick):
     def _compute(self, x: Qubits, anc: Qubits, i: int, j: int, skip: int):
         if skip == 0:
-            anc[j].x(x[i])
+            anc[j].lelbow(x[i])
         for i2 in range(max(1, skip - 1), x.num_qubits - i):
             anc_pos = j + (i2 - skip + 1)
             if anc_pos >= anc.num_qubits:
                 break
             assert 0 <= anc_pos < anc.num_qubits
-            anc[anc_pos].x(x[i] | x[i + i2])
+            anc[anc_pos].lelbow(x[i] | x[i + i2])
 
 
 class Square(Qubrick):
