@@ -1,7 +1,12 @@
+import os
 import random
+
+import pytest
 
 from qmath.mult import Square
 from qmath.utils.test_utils import QPUTestHelper
+
+RUN_SLOW_TESTS = os.getenv("RUN_SLOW_TESTS") == "1"
 
 
 def test_square():
@@ -11,6 +16,19 @@ def test_square():
     qpu_helper.record_op(q_ans)
 
     for _ in range(50):
-        x = -10 + 10 * random.random()
-        result = qpu_helper.apply_op([x, 0])
+        x = -10 + 20 * random.random()
+        result = qpu_helper.apply_op([x, 0], check_no_side_effect=True)
         assert abs(result - x**2) < 1e-4
+
+
+@pytest.mark.skipif(not RUN_SLOW_TESTS, reason="slow test")
+def test_square_high_precision():
+    qpu_helper = QPUTestHelper(num_qubits=500, qubits_per_reg=50, radix=40, num_inputs=2)
+    q_x, q_ans = qpu_helper.inputs
+    Square().compute(q_x, q_ans)
+    qpu_helper.record_op(q_ans)
+
+    for _ in range(50):
+        x = -10 + 20 * random.random()
+        result = qpu_helper.apply_op([x, 0])
+        assert abs(result - x**2) < 1e-11

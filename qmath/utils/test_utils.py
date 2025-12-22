@@ -1,4 +1,4 @@
-from psiqworkbench import QPU, Qubits, QFixed
+from psiqworkbench import QPU, Qubits, QFixed, QUInt
 from psiqworkbench.ops.qpu_ops import convert_ops_to_cpp
 
 
@@ -43,7 +43,7 @@ class QPUTestHelper:
         ops = self.qpu.get_instructions()[self.prep_length :]
         self.cpp_ops = convert_ops_to_cpp(ops)
 
-    def apply_op(self, input_vals: list[float]) -> float:
+    def apply_op(self, input_vals: list[float], check_no_side_effect=False) -> float:
         """Writes `input_vals` into inputs, applies compiled circuit and reads the result."""
         assert len(input_vals) == self.num_inputs
         qpu = QPU(filters=[">>64bit>>", ">>bit-sim>>"])
@@ -53,8 +53,15 @@ class QPUTestHelper:
         inputs = self._create_inputs(qpu)
         for i in range(self.num_inputs):
             inputs[i].write(input_vals[i])
+        if check_no_side_effect:
+            other_mask = ((1 << self.num_qubits) - 1) ^ self.result_qreg_mask
+            other_reg = QUInt(Qubits(from_mask=other_mask, name="other", qpu=qpu))
+            other_val = other_reg.read()
         qpu.flush()
 
         sim._put_native(self.cpp_ops)
         result_qreg = QFixed(Qubits(from_mask=self.result_qreg_mask, name="temp", qpu=qpu), radix=self.radix)
+        if check_no_side_effect:
+            new_other_val = other_reg.read()
+            assert new_other_val == other_val, "Changed qubits other than result."
         return result_qreg.read()
