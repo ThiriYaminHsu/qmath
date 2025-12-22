@@ -39,14 +39,13 @@ def test_initial_guess():
         assert result == expected
 
 
-@pytest.mark.skipif(not RUN_SLOW_TESTS, reason="slow test")
-def test_inverse_square_root():
-    qpu_helper = QPUTestHelper(num_qubits=500, qubits_per_reg=20, radix=15)
+def test_inverse_square_root_low_precision():
+    qpu_helper = QPUTestHelper(num_qubits=400, qubits_per_reg=15, radix=11)
     func = InverseSquareRoot(num_iterations=3)
     func.compute(qpu_helper.inputs[0])
     qpu_helper.record_op(func.get_result_qreg())
 
-    for a in [0.2, 0.3, 0.4, 1.0, 1.5, 2.0, 5.6] * 10:
+    for a in np.linspace(0.25, 5, 100):
         result = qpu_helper.apply_op([a])
         expected = a**-0.5
         assert np.abs(result - expected) < 1e-3
