@@ -1,6 +1,7 @@
 Benchmark,Qubits,Ops
-GidneyAdd,31,215
-CDKMAdder,1,272
-TTKAdder,0,216
-Square,113,11708
-Subtract,31,368
+GidneyAdd,95,215
+CDKMAdder,65,272
+TTKAdder,64,216
+Square,177,11708
+Subtract,95,368
+InvSquareRoot(iter=3),372,44399

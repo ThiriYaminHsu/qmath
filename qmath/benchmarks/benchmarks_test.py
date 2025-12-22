@@ -13,6 +13,7 @@ from psiqworkbench import QPU, QFixed, QUInt
 
 from qmath.add import CDKMAdder, TTKAdder, Subtract
 from qmath.mult import Square
+from qmath.func import InverseSquareRoot
 
 BENCHMARKS_FILE_NAME = "qmath/benchmarks/benchmarks.csv"
 
@@ -20,15 +21,20 @@ BENCHMARKS_FILE_NAME = "qmath/benchmarks/benchmarks.csv"
 @dataclass(frozen=True)
 class BenchmarkResult:
     name: str  # Interval start.
-    qubits: int  # Number of auxiliary qubits (not counting input and output registers).
-    ops: int  # Number of operations.
+    metrics: dict  # QPU metrics.
 
     @staticmethod
     def csv_header():
         return ",".join(["Benchmark", "Qubits", "Ops"])
 
     def to_csv_row(self):
-        return f"{self.name},{self.qubits},{self.ops}"
+        return ",".join(
+            [
+                self.name,
+                str(self.metrics["qubit_highwater"]),
+                str(self.metrics["total_num_ops"]),
+            ]
+        )
 
 
 def _benhmark_gidney_add() -> BenchmarkResult:
@@ -37,8 +43,7 @@ def _benhmark_gidney_add() -> BenchmarkResult:
     qs_x = QFixed(32, radix=24, qpu=qpu)
     qs_y = QFixed(32, radix=24, qpu=qpu)
     qbk.GidneyAdd().compute(qs_x, qs_y)
-    metrics = qpu.metrics()
-    return BenchmarkResult(name="GidneyAdd", qubits=metrics["qubit_highwater"] - 64, ops=metrics["total_num_ops"])
+    return BenchmarkResult(name="GidneyAdd", metrics=qpu.metrics())
 
 
 def _benhmark_cdkm_adder() -> BenchmarkResult:
@@ -47,8 +52,7 @@ def _benhmark_cdkm_adder() -> BenchmarkResult:
     qs_x = QUInt(32, qpu=qpu)
     qs_y = QUInt(32, qpu=qpu)
     CDKMAdder().compute(qs_x, qs_y)
-    metrics = qpu.metrics()
-    return BenchmarkResult(name="CDKMAdder", qubits=metrics["qubit_highwater"] - 64, ops=metrics["total_num_ops"])
+    return BenchmarkResult(name="CDKMAdder", metrics=qpu.metrics())
 
 
 def _benhmark_ttk_adder() -> BenchmarkResult:
@@ -57,8 +61,7 @@ def _benhmark_ttk_adder() -> BenchmarkResult:
     qs_x = QUInt(32, qpu=qpu)
     qs_y = QUInt(32, qpu=qpu)
     TTKAdder().compute(qs_x, qs_y)
-    metrics = qpu.metrics()
-    return BenchmarkResult(name="TTKAdder", qubits=metrics["qubit_highwater"] - 64, ops=metrics["total_num_ops"])
+    return BenchmarkResult(name="TTKAdder", metrics=qpu.metrics())
 
 
 def _benhmark_square() -> BenchmarkResult:
@@ -67,8 +70,7 @@ def _benhmark_square() -> BenchmarkResult:
     qs_x = QFixed(32, name="x", radix=24, qpu=qpu)
     qs_y = QFixed(32, name="y", radix=24, qpu=qpu)
     Square().compute(qs_x, qs_y)
-    metrics = qpu.metrics()
-    return BenchmarkResult(name="Square", qubits=metrics["qubit_highwater"] - 64, ops=metrics["total_num_ops"])
+    return BenchmarkResult(name="Square", metrics=qpu.metrics())
 
 
 def _benhmark_subtract() -> BenchmarkResult:
@@ -77,8 +79,15 @@ def _benhmark_subtract() -> BenchmarkResult:
     qs_x = QFixed(32, name="x", radix=24, qpu=qpu)
     qs_y = QFixed(32, name="y", radix=24, qpu=qpu)
     Subtract().compute(qs_x, qs_y)
-    metrics = qpu.metrics()
-    return BenchmarkResult(name="Subtract", qubits=metrics["qubit_highwater"] - 64, ops=metrics["total_num_ops"])
+    return BenchmarkResult(name="Subtract", metrics=qpu.metrics())
+
+
+def _benchmark_inv_square_root() -> BenchmarkResult:
+    qpu = QPU(filters=[">>witness>>"])
+    qpu.reset(400)
+    qs_a = QFixed(20, name="a", radix=15, qpu=qpu)
+    InverseSquareRoot(num_iterations=3).compute(qs_a)
+    return BenchmarkResult(name="InvSquareRoot(iter=3)", metrics=qpu.metrics())
 
 
 def _run_benchmarks() -> str:
@@ -89,6 +98,7 @@ def _run_benchmarks() -> str:
         _benhmark_ttk_adder(),
         _benhmark_square(),
         _benhmark_subtract(),
+        _benchmark_inv_square_root(),
     ]
     return "\n".join([BenchmarkResult.csv_header()] + [r.to_csv_row() for r in results])
 
@@ -108,5 +118,5 @@ def test_benchmarks():
 # Use this for development when optimizing/debugging single benchmark.
 # python3 ./qmath/benchmarks/benchmarks_test.py
 if __name__ == "__main__":
-    result = _benhmark_subtract()
+    result = _benchmark_inv_square_root()
     print(result.to_csv_row())
