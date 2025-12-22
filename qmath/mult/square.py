@@ -17,17 +17,15 @@ class AbsInPlace(Qubrick):
 
 
 class SquareIteration(Qubrick):
-    def _compute(self, x: Qubits, anc: Qubits, i, j, skip):
+    def _compute(self, x: Qubits, anc: Qubits, i: int, j: int, skip: int):
         if skip == 0:
-            # print(f"x[{i}]^2 -> ans[{j}]")
             anc[j].x(x[i])
-        for ii in range(max(1, skip - 1), 1000):
-            anc_pos = j + (ii - skip + 1)
-            if (i + ii) >= x.num_qubits or anc_pos >= anc.num_qubits:
+        for i2 in range(max(1, skip - 1), x.num_qubits - i):
+            anc_pos = j + (i2 - skip + 1)
+            if anc_pos >= anc.num_qubits:
                 break
             assert 0 <= anc_pos < anc.num_qubits
-            # print(f"x[{i}]*x[{i+ii}] -> ans[{anc_pos}]")
-            anc[anc_pos].x(x[i] | x[i + ii])
+            anc[anc_pos].x(x[i] | x[i + i2])
 
 
 class Square(Qubrick):

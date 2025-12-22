@@ -25,7 +25,7 @@ class BenchmarkResult:
 
     @staticmethod
     def csv_header():
-        return ",".join(["Benchmark", "Qubits", "Ops"])
+        return ",".join(["Benchmark", "Qubits", "Ops", "Toffoli", "T"])
 
     def to_csv_row(self):
         return ",".join(
@@ -33,6 +33,8 @@ class BenchmarkResult:
                 self.name,
                 str(self.metrics["qubit_highwater"]),
                 str(self.metrics["total_num_ops"]),
+                str(self.metrics["toffoli_count"]),
+                str(self.metrics["t_count"]),
             ]
         )
 
@@ -118,5 +120,5 @@ def test_benchmarks():
 # Use this for development when optimizing/debugging single benchmark.
 # python3 ./qmath/benchmarks/benchmarks_test.py
 if __name__ == "__main__":
-    result = _benchmark_inv_square_root()
+    result = _benhmark_square()
     print(result.to_csv_row())
