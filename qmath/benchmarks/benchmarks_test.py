@@ -18,6 +18,11 @@ from qmath.func import InverseSquareRoot
 BENCHMARKS_FILE_NAME = "qmath/benchmarks/benchmarks.csv"
 
 
+BENCHMARK_FILTERS = [
+    ">>witness>>",
+]
+
+
 @dataclass(frozen=True)
 class BenchmarkResult:
     name: str  # Interval start.
@@ -40,7 +45,7 @@ class BenchmarkResult:
 
 
 def _benhmark_gidney_add() -> BenchmarkResult:
-    qpu = QPU(filters=[">>witness>>"])
+    qpu = QPU(filters=BENCHMARK_FILTERS)
     qpu.reset(100)
     qs_x = QFixed(32, radix=24, qpu=qpu)
     qs_y = QFixed(32, radix=24, qpu=qpu)
@@ -49,7 +54,7 @@ def _benhmark_gidney_add() -> BenchmarkResult:
 
 
 def _benhmark_cdkm_adder() -> BenchmarkResult:
-    qpu = QPU(filters=[">>witness>>"])
+    qpu = QPU(filters=BENCHMARK_FILTERS)
     qpu.reset(100)
     qs_x = QUInt(32, qpu=qpu)
     qs_y = QUInt(32, qpu=qpu)
@@ -58,7 +63,7 @@ def _benhmark_cdkm_adder() -> BenchmarkResult:
 
 
 def _benhmark_ttk_adder() -> BenchmarkResult:
-    qpu = QPU(filters=[">>witness>>"])
+    qpu = QPU(filters=BENCHMARK_FILTERS)
     qpu.reset(100)
     qs_x = QUInt(32, qpu=qpu)
     qs_y = QUInt(32, qpu=qpu)
@@ -67,7 +72,7 @@ def _benhmark_ttk_adder() -> BenchmarkResult:
 
 
 def _benchmark_square(fallback_to_mul: bool) -> BenchmarkResult:
-    qpu = QPU(filters=[">>witness>>"])
+    qpu = QPU(filters=BENCHMARK_FILTERS)
     qpu.reset(200)
     qs_x = QFixed(32, name="x", radix=24, qpu=qpu)
     qs_y = QFixed(32, name="y", radix=24, qpu=qpu)
@@ -77,7 +82,7 @@ def _benchmark_square(fallback_to_mul: bool) -> BenchmarkResult:
 
 
 def _benhmark_subtract() -> BenchmarkResult:
-    qpu = QPU(filters=[">>witness>>"])
+    qpu = QPU(filters=BENCHMARK_FILTERS)
     qpu.reset(200)
     qs_x = QFixed(32, name="x", radix=24, qpu=qpu)
     qs_y = QFixed(32, name="y", radix=24, qpu=qpu)
@@ -86,7 +91,7 @@ def _benhmark_subtract() -> BenchmarkResult:
 
 
 def _benchmark_inv_square_root() -> BenchmarkResult:
-    qpu = QPU(filters=[">>witness>>"])
+    qpu = QPU(filters=BENCHMARK_FILTERS)
     qpu.reset(400)
     qs_a = QFixed(20, name="a", radix=15, qpu=qpu)
     InverseSquareRoot(num_iterations=3).compute(qs_a)
