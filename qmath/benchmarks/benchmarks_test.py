@@ -99,7 +99,7 @@ def _benchmark_inv_square_root() -> BenchmarkResult:
 
 
 def _benhmark_increment() -> BenchmarkResult:
-    qpu = QPU(filters=[">>toffoli-filter>>", ">>witness>>"])
+    qpu = QPU(filters=BENCHMARK_FILTERS)
     qpu.reset(64)
     qs_x = QUInt(32, name="x", qpu=qpu)
     Increment().compute(qs_x, 1)
