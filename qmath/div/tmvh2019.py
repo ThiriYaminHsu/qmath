@@ -3,9 +3,12 @@ from psiqworkbench import Qubits, QUInt
 from psiqworkbench.interfaces import Adder
 from psiqworkbench.qubricks import Qubrick
 from psiqworkbench.symbolics.qubrick_costs import QubrickCosts
+from psiqworkbench.symbolics.parameter import Max, Parameter
+from psiqworkbench import SymbolicQubits
 
 from ..utils.gates import cnot
 from ..utils.padding import padded
+from ..utils.re_utils import re_symbolic_int_binary_op
 
 
 class TMVHDivider(Qubrick):
@@ -99,16 +102,14 @@ class TMVHDivider(Qubrick):
 
     def _compute(self, a: QUInt, b: QUInt, c: QUInt):
         """Computes (a, b, c) := (a%b, b, a/b)."""
-        n = len(a)
         assert len(b) <= len(a), "Register b must be no longer than register a."
         assert len(c) == len(a), "Register c must have the same lenth as register a."
 
+        n = max(len(a), len(b) + 1)
         if self.restoring:
-            n = max(len(a), len(b) + 1)
             with padded(self, (a, b, c), (n, n, n)) as (a, b, c):
                 self._divide_restoring(a, b, c)
         else:
-            n = max(len(a), len(b) + 1)
             with padded(self, (a, b, c), (n, n - 1, n)) as (a, b, c):
                 self._divide_non_restoring(a, b | c[0], c[1:])
                 a[n - 1].swap(c[0])
@@ -117,7 +118,28 @@ class TMVHDivider(Qubrick):
         na = a.num_qubits
         nb = b.num_qubits
         assert c.num_qubits == na
+        assert self.adder.__class__.__name__ == "GidneyAdd", "RE supported only for GidneyAdd (default adder)."
 
-        # TODO: implement.
-        cost = QubrickCosts()
+        # Complexity depends only n. Diference nb-na affects only padding.
+        n = Max(na, nb + 1)
+        padded_size = (3 * n) if self.restoring else (3 * n - 1)
+        padding_size = padded_size - (na + nb + na)
+
+        if self.restoring:
+            cost = QubrickCosts(
+                toffs=n**2,
+                local_ancillae=padding_size + (n - 1),
+                active_volume=190 * n**2 - 164 * n,
+                gidney_lelbows=2 * n**2 - 2 * n,
+                gidney_relbows=2 * n**2 - 2 * n,
+            )
+        else:
+            cost = QubrickCosts(
+                toffs=n - 1,
+                local_ancillae=padding_size + (n - 1),
+                active_volume=80 * n**2 + 27 * n - 203,
+                gidney_lelbows=n**2 - 2,
+                gidney_relbows=n**2 - 2,
+            )
+
         self.get_qc().add_cost_event(cost)
