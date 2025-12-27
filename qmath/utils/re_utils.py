@@ -1,12 +1,10 @@
-from psiqworkbench import QPU, SymbolicQPU, QUInt, SymbolicQubits, resource_estimator, Qubrick
-
-from psiqworkbench.symbolics import Parameter
-from psiqworkbench import SymbolicQPU, SymbolicQubits, Qubits
-from psiqworkbench.utils.unstable_api_utils import ignore_unstable_warnings
-from psiqworkbench.resource_estimation.qre._resource_dict import ResourceDict
 from typing import Callable
 
 import numpy as np
+from psiqworkbench import QPU, QFixed, Qubits, Qubrick, QUInt, SymbolicQPU, SymbolicQubits, resource_estimator
+from psiqworkbench.resource_estimation.qre._resource_dict import ResourceDict
+from psiqworkbench.symbolics import Parameter
+from psiqworkbench.utils.unstable_api_utils import ignore_unstable_warnings
 
 ignore_unstable_warnings()
 
@@ -91,3 +89,48 @@ def verify_re(
                 print(error)
             else:
                 raise AssertionError(error)
+
+
+class SymbolicQFixed(SymbolicQubits):
+    """Symbolic register for fixed-precision signed number."""
+
+    def __init__(self, *, radix: int = 0, **kwargs):
+        super().__init__(**kwargs)
+        self.radix = radix
+
+
+def re_symbolic_fixed_point(op: Qubrick, n_inputs: int = 1) -> ResourceDict:
+    """Symbolic resource estimation for fixed-point operation."""
+    n = Parameter("n", "Register size")
+    radix = Parameter("radix", "Radix")
+
+    qc = SymbolicQPU()
+    inputs = [SymbolicQFixed(num_qubits=n, name=f"input_{i}", qpu=qc, radix=radix) for i in range(n_inputs)]
+    op.compute(*inputs)
+
+    re = resource_estimator(qc)
+    return re.resources()
+
+
+def re_numeric_fixed_point(
+    op: Qubrick,
+    assgn: dict[str, int],
+    n_inputs: int = 1,
+    qubits_factor: int = 10,
+) -> ResourceDict:
+    """Numeric resource estimation for fixed-point operation.
+
+    :param op: Operation to resource-estimate.
+    :param assgn: Dictionary with 2 keys ("n", "radix") - register size and radix.
+    :param n_inputs: Number of input registers.
+    :param qubits_factor: Upper-bound estimate for ratio of total qubits needed to register size.
+        Used to compute number of qubits in simulator.
+    """
+    n, radix = assgn["n"], assgn["radix"]
+    qpu = QPU(filters=FILTERS_FOR_NUMERIC_RE)
+    qpu.reset(qubits_factor * n)
+    inputs = [QFixed(n, name=f"input_{i}", radix=radix, qpu=qpu) for i in range(n_inputs)]
+    op.compute(*inputs)
+
+    re = resource_estimator(qpu)
+    return re.resources()

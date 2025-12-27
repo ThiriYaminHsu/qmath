@@ -1,6 +1,7 @@
 import psiqworkbench.qubricks as qbk
 from psiqworkbench import QFixed, QInt, QUInt, Qubits
 from psiqworkbench.qubricks import Qubrick
+from psiqworkbench.symbolics.qubrick_costs import QubrickCosts
 
 from ..mult import Square
 from ..add import Subtract
@@ -15,7 +16,7 @@ class _InitialGuess(Qubrick):
         for i in range(a.num_qubits - 1, -1, -1):
             # Copy a[i] to ans[j], but only if flag is unset.
             flag.x()
-            ans[i].x(a[i] | flag)
+            ans[i].lelbow(a[i] | flag)
             flag.x()
 
             # If ans[i]=1 (which implies flag was unset), set the flag.
@@ -40,6 +41,17 @@ class _InitialGuess(Qubrick):
                 continue
             assert 0 <= j < ans.num_qubits - 1
             ans[j].x(r[i])
+
+    def _estimate(self, a: QFixed, ans: QFixed):
+        # This resource estimate is correct only when radix is between 1/3 and 2/3 of num_qubits.
+        n = a.num_qubits
+        assert a.num_qubits == ans.num_qubits, "Input and output size must match for RE."
+        cost = QubrickCosts(
+            local_ancillae=n + 1,
+            active_volume=52 * n,
+            gidney_lelbows=n,
+        )
+        self.get_qc().add_cost_event(cost)
 
 
 class _NewtonIteration(Qubrick):
@@ -72,6 +84,8 @@ class InverseSquareRoot(Qubrick):
     We use simplified version of algorithm:
         * First iteration is not optimized.
         * First iteration's constant C is taken 1.615 regardless of a.
+
+    See https://github.com/fedimser/qmath/blob/main/notebooks/classic/inv_sqrt.ipynb
     """
 
     def __init__(
