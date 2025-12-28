@@ -7,8 +7,10 @@ done so we can define symbolic resource estimates for them.
 import psiqworkbench.qubricks as qbk
 from psiqworkbench import QFixed, Qubrick, QInt, QUInt
 from psiqworkbench.symbolics.qubrick_costs import QubrickCosts
+from psiqworkbench.symbolics import Min
 
 from ..utils.symbolic import SymbolicQFixed
+from ..utils.re_utils import fraction_length
 
 
 class Negate(Qubrick):
@@ -71,14 +73,35 @@ class Add(Qubrick):
 
 
 class AddConst(Qubrick):
-    """Computes lhs += rhs (lhs is aclassical number)."""
+    """Computes lhs += rhs (a is aclassical number)."""
 
-    def _compute(self, lhs: QFixed, rhs: float):
-        # if abs(rhs) > 2 ** (-lhs.radix - 1):
-        qbk.GidneyAdd().compute(lhs, rhs)
+    def __init__(self, rhs: float, **kwargs):
+        super().__init__(**kwargs)
+        self.rhs = rhs
 
-    def _estimate(self, lhs: SymbolicQFixed, rhs: float):
-        qbk.GidneyAdd().compute(lhs, rhs)
+    def _compute(self, lhs: QFixed):
+        assert abs(self.rhs) <= 2 ** (lhs.num_qubits - lhs.radix - 1), f"Constant {self.rhs} is too large."
+        qbk.GidneyAdd().compute(lhs, self.rhs)
+
+    def _estimate(self, lhs: SymbolicQFixed):
+        # This estimate might be off (overestimate) by O(1) in case when lhs
+        # is not "round" number, but when rounded to fixed precision, few of
+        # least significant bits become zeroes.
+        # This estimate assumes that rhs fits in given register.
+
+        # Compute n - length of rhs except trailing zeros.
+        n = lhs.num_qubits
+        fl = fraction_length(self.rhs)
+        if fl is not None:
+            n = Min(n, lhs.num_qubits - lhs.radix + fl)
+
+        cost = QubrickCosts(
+            gidney_lelbows=n - 2,
+            gidney_relbows=n - 2,
+            local_ancillae=n - 2,
+            active_volume=61 * n - 118,
+        )
+        self.get_qc().add_cost_event(cost)
 
 
 class Subtract(Qubrick):
@@ -115,10 +138,14 @@ class MultiplyAdd(Qubrick):
 
 # TODO: implement.
 class MultiplyConstAdd(Qubrick):
-    """Computes dst += lhs * rhs (rhs is aclassical number)."""
+    """Computes dst += lhs * rhs (rhs is a classical number)."""
 
-    def _compute(self, dst: QFixed, lhs: QFixed, rhs: float):
+    def __init__(self, rhs: float, **kwargs):
+        super().__init__(**kwargs)
+        self.rhs = rhs
+
+    def _compute(self, dst: QFixed, lhs: QFixed):
         pass
 
-    def _estimate(self, dst: SymbolicQFixed, lhs: SymbolicQFixed, rhs: float):
+    def _estimate(self, dst: SymbolicQFixed, lhs: SymbolicQFixed):
         pass

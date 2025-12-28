@@ -20,7 +20,7 @@ class HornerScheme(Qubrick):
         def linear(a: QFixed, b: float) -> QFixed:
             _, result = alloc_temp_qreg_like(self, x, name="result")
             MultiplyAdd().compute(result, a, x)
-            AddConst().compute(result, b)
+            AddConst(b).compute(result)
             return result
 
         # TODO: skip allocating first register by doing with quantum-classical multiplication on first step.

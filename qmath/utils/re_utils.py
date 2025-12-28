@@ -5,6 +5,7 @@ from psiqworkbench import QPU, QFixed, Qubits, Qubrick, QUInt, SymbolicQPU, Symb
 from psiqworkbench.resource_estimation.qre._resource_dict import ResourceDict
 from psiqworkbench.symbolics import Parameter
 from psiqworkbench.utils.unstable_api_utils import ignore_unstable_warnings
+from psiqworkbench.utils import bit_utils
 
 from ..utils.symbolic import SymbolicQFixed
 
@@ -131,3 +132,19 @@ def re_numeric_fixed_point(
 
     re = resource_estimator(qpu)
     return re.resources()
+
+
+def fraction_length(x: float, max_length: int = 10) -> int | None:
+    """Returns length of fractional part of x in binary representation.
+
+    If x is integer, return -num_trailing_zeros(x).
+    If fractional part is not finite or longer than `max_length`, returns None.
+    """
+    x = float(x)
+    if int(x) == x:
+        return -bit_utils.num_trailing_zeros(x)
+    for i in range(1, max_length + 1):
+        x *= 2
+        if x.is_integer():
+            return i
+    return None
