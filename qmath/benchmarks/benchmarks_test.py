@@ -14,7 +14,7 @@ from psiqworkbench import QPU, QFixed, QUInt
 from qmath.add import CDKMAdder, Increment, TTKAdder
 from qmath.func import InverseSquareRoot
 from qmath.func.common import Subtract
-from qmath.func.square import Square
+from qmath.func.square import Square, SquareOptimized
 
 BENCHMARKS_FILE_NAME = "qmath/benchmarks/benchmarks.csv"
 
@@ -72,14 +72,22 @@ def _benhmark_ttk_adder() -> BenchmarkResult:
     return BenchmarkResult(name="TTKAdder", metrics=qpu.metrics())
 
 
-def _benchmark_square(fallback_to_mul: bool) -> BenchmarkResult:
+def _benchmark_square() -> BenchmarkResult:
     qpu = QPU(filters=BENCHMARK_FILTERS)
     qpu.reset(200)
     qs_x = QFixed(32, name="x", radix=24, qpu=qpu)
     qs_y = QFixed(32, name="y", radix=24, qpu=qpu)
-    Square(fallback_to_mul=fallback_to_mul).compute(qs_x, qs_y)
-    name = "Square(via mul)" if fallback_to_mul else "Square"
-    return BenchmarkResult(name=name, metrics=qpu.metrics())
+    Square().compute(qs_x, qs_y)
+    return BenchmarkResult(name="Square", metrics=qpu.metrics())
+
+
+def _benchmark_square_optimized() -> BenchmarkResult:
+    qpu = QPU(filters=BENCHMARK_FILTERS)
+    qpu.reset(200)
+    qs_x = QFixed(32, name="x", radix=24, qpu=qpu)
+    qs_y = QFixed(32, name="y", radix=24, qpu=qpu)
+    SquareOptimized().compute(qs_x, qs_y)
+    return BenchmarkResult(name="SquareOptimized", metrics=qpu.metrics())
 
 
 def _benhmark_subtract() -> BenchmarkResult:
@@ -113,8 +121,8 @@ def _run_benchmarks() -> str:
         _benhmark_gidney_add(),
         _benhmark_cdkm_adder(),
         _benhmark_ttk_adder(),
-        _benchmark_square(False),
-        _benchmark_square(True),
+        _benchmark_square_optimized(),
+        _benchmark_square(),
         _benhmark_subtract(),
         _benchmark_inv_square_root(),
         _benhmark_increment(),

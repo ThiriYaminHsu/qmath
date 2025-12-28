@@ -12,7 +12,7 @@ from ..utils.symbolic import alloc_temp_qreg_like
 class _InitialGuess(Qubrick):
     def _msb(self, a: Qubits, ans: Qubits):
         """Finds most significant bit in a and sets it in ans."""
-        flag: Qubits = self.alloc_temp_qreg(1, "t")
+        flag: Qubits = self.alloc_temp_qreg(1, "flag")
 
         # For each input qubit i compute which output qubit must be set if i is MSB.
         for i in range(a.num_qubits - 1, -1, -1):
@@ -66,11 +66,8 @@ class _NewtonIteration(Qubrick):
         _, t1 = alloc_temp_qreg_like(self, x0, name="t1")
         _, t2 = alloc_temp_qreg_like(self, x0, name="t2")
         _, t3 = alloc_temp_qreg_like(self, x0, name="t3")
-        assert isinstance(x0, BaseQubits)
-        assert x0.qpu is not None
-        # assert t1.qpu is not None
         Square().compute(x0, t1)  # t1 := x0^2.
-        MultiplyAdd().compute(t2, a, t1)  # t2 := a*x0^2.
+        MultiplyAdd().compute(t2, t1, a)  # t2 := a*x0^2.
         t3.write(c)
         Subtract().compute(t3, t2)  # t3 := c - a*x0^2
         MultiplyAdd().compute(x1, x0, t3)  # x1 := x0*(c-a*x0^2).
@@ -103,12 +100,11 @@ class InverseSquareRoot(Qubrick):
         self.num_iterations = num_iterations
 
     def _compute(self, a: QFixed):
-        a_half = QFixed(a, radix=a.radix + 1)
         n = self.num_iterations
-        x = [QFixed(self.alloc_temp_qreg(a.num_qubits, f"x_{i}"), radix=a.radix) for i in range(n + 1)]
+        x = [alloc_temp_qreg_like(self, a, name=f"x_{i}")[1] for i in range(n + 1)]
         _InitialGuess().compute(a, x[0])
+        a.radix = a.radix + 1  # a := a/2.
         for i in range(1, n + 1):
             c = 1.615 if i == 1 else 1.5
-            _NewtonIteration().compute(x[i - 1], x[i], a_half, c=c)
-
+            _NewtonIteration().compute(x[i - 1], x[i], a, c=c)
         self.set_result_qreg(x[n])

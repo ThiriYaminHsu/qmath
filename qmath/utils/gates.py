@@ -31,5 +31,5 @@ class ParallelCnot(Qubrick):
 
     def _estimate(self, a: Qubits, b: Qubits):
         n = a.num_qubits
-        # TODO: check if this is correct.
-        self.get_qc().add_cost_event(QubrickCosts(active_volume=n))
+        assert b.num_qubits == n
+        self.get_qc().add_cost_event(QubrickCosts(active_volume=4 * n))

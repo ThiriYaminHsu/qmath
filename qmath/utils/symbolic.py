@@ -9,6 +9,11 @@ class SymbolicQFixed(SymbolicQubits):
         self.radix = radix
 
 
+class Dummy:
+    def release(self):
+        pass
+
+
 def alloc_temp_qreg_like(qbk: Qubrick, x: QFixed, name: str = "") -> tuple[Qubits, QFixed]:
     """Allocates temporary register with the same size and radix as x.
 
@@ -17,8 +22,10 @@ def alloc_temp_qreg_like(qbk: Qubrick, x: QFixed, name: str = "") -> tuple[Qubit
     """
     if name == "":
         name = x.name + "_clone"
-    qreg = qbk.alloc_temp_qreg(x.num_qubits, name)
     if x.qpu.is_symbolic:
-        return qreg, SymbolicQFixed(num_qubits=x.num_qubits, name=name, radix=x.radix, qpu=x.qpu)
+        qreg = qbk.alloc_temp_qreg(x.num_qubits, name)
+        qreg.radix = x.radix
+        return qreg, qreg  # SymbolicQFixed(num_qubits=x.num_qubits, name=name, radix=x.radix, qpu=x.qpu)
     else:
+        qreg = qbk.alloc_temp_qreg(x.num_qubits, name)
         return qreg, QFixed(qreg, radix=x.radix, qpu=x.qpu)

@@ -91,9 +91,7 @@ class MultiplyAdd(Qubrick):
         n = dst.num_qubits
         assert lhs.num_qubits == n
         assert rhs.num_qubits == n
-        r = dst.radix
-        assert lhs.radix == r
-        assert rhs.radix == r
+        r = lhs.radix + rhs.radix - dst.radix
 
         # This RE is correct when n>=4, 0<r<n.
         # It is within 0.1% of numerical RE for active volume and exact for other metrics.
