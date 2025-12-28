@@ -11,9 +11,10 @@ from dataclasses import dataclass
 import psiqworkbench.qubricks as qbk
 from psiqworkbench import QPU, QFixed, QUInt
 
-from qmath.add import CDKMAdder, TTKAdder, Subtract, Increment
-from qmath.mult import Square
+from qmath.add import CDKMAdder, Increment, TTKAdder
 from qmath.func import InverseSquareRoot
+from qmath.func.common import Subtract
+from qmath.func.square import Square
 
 BENCHMARKS_FILE_NAME = "qmath/benchmarks/benchmarks.csv"
 

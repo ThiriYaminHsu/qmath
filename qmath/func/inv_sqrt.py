@@ -1,10 +1,12 @@
 import psiqworkbench.qubricks as qbk
 from psiqworkbench import QFixed, QInt, QUInt, Qubits
 from psiqworkbench.qubricks import Qubrick
+from psiqworkbench.qubits.base_qubits import BaseQubits
 from psiqworkbench.symbolics.qubrick_costs import QubrickCosts
 
-from ..mult import Square
-from ..add import Subtract
+from .square import Square
+from .common import Subtract, MultiplyAdd
+from ..utils.symbolic import alloc_temp_qreg_like
 
 
 class _InitialGuess(Qubrick):
@@ -61,14 +63,17 @@ class _NewtonIteration(Qubrick):
     """
 
     def _compute(self, x0: QFixed, x1: QFixed, a: QFixed, c=1.5):
-        t1 = QFixed(self.alloc_temp_qreg(x0.num_qubits, "t1"), radix=x0.radix)
-        t2 = QFixed(self.alloc_temp_qreg(x0.num_qubits, "t2"), radix=x0.radix)
-        t3 = QFixed(self.alloc_temp_qreg(x0.num_qubits, "t3"), radix=x0.radix)
+        _, t1 = alloc_temp_qreg_like(self, x0, name="t1")
+        _, t2 = alloc_temp_qreg_like(self, x0, name="t2")
+        _, t3 = alloc_temp_qreg_like(self, x0, name="t3")
+        assert isinstance(x0, BaseQubits)
+        assert x0.qpu is not None
+        # assert t1.qpu is not None
         Square().compute(x0, t1)  # t1 := x0^2.
-        qbk.GidneyMultiplyAdd().compute(t2, a, t1)  # t2 := a*x0^2.
+        MultiplyAdd().compute(t2, a, t1)  # t2 := a*x0^2.
         t3.write(c)
         Subtract().compute(t3, t2)  # t3 := c - a*x0^2
-        qbk.GidneyMultiplyAdd().compute(x1, x0, t3)  # x1 := x0*(c-a*x0^2).
+        MultiplyAdd().compute(x1, x0, t3)  # x1 := x0*(c-a*x0^2).
 
 
 class InverseSquareRoot(Qubrick):

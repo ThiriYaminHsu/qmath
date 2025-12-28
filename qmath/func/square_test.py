@@ -3,7 +3,7 @@ import random
 
 import pytest
 
-from qmath.mult import Square
+from qmath.func.square import Square
 from qmath.utils.test_utils import QPUTestHelper
 from psiqworkbench.filter_presets import BIT_DEFAULT
 from psiqworkbench import QPU, Qubits, QFixed, QUInt

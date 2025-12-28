@@ -2,12 +2,17 @@ import numpy as np
 import psiqworkbench.qubricks as qbk
 from psiqworkbench import QFixed, QUFixed, QUInt, Qubits
 from psiqworkbench.qubricks import Qubrick
+from psiqworkbench.qubits.base_qubits import BaseQubits
+from psiqworkbench.symbolics.qubrick_costs import QubrickCosts
 
-from ..utils.gates import parallel_cnot
+from ..func.common import MultiplyAdd
+from ..utils.symbolic import alloc_temp_qreg_like
+from ..utils.gates import ParallelCnot
 
 
+# TODO: move to common.
 class AbsInPlace(Qubrick):
-    """Computes absolute value."""
+    """Computes x := abs(x)."""
 
     def _compute(self, x: QFixed):
         sign = self.alloc_temp_qreg(1, "sign")
@@ -28,6 +33,7 @@ class SquareIteration(Qubrick):
             anc[anc_pos].lelbow(x[i] | x[i + i2])
 
 
+# TODO: move to funcs.
 class Square(Qubrick):
     """Computes square of given QFixed register.
 
@@ -66,12 +72,10 @@ class Square(Qubrick):
 
     def _compute(self, x: QFixed, target: QFixed):
         if self.fallback_to_mul:
-            x_reg = Qubits(x)
-            x_copy_reg: Qubits = self.alloc_temp_qreg(x.num_qubits, "x_copy")
-            x_copy = QFixed(x_copy_reg, radix=x.radix)
-            parallel_cnot(x_reg, x_copy_reg)
-            qbk.GidneyMultiplyAdd().compute(target, x, x_copy)
-            parallel_cnot(x_reg, x_copy_reg)
+            x_copy_reg, x_copy = alloc_temp_qreg_like(self, x)
+            print(f"{x_copy.num_qubits=} {x_copy.radix=} {x_copy_reg.num_qubits=}")
+            with ParallelCnot().computed(x, x_copy):
+                MultiplyAdd().compute(target, x, x_copy)
             x_copy_reg.release()
             return
 

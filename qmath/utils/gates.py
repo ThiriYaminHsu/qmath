@@ -1,4 +1,5 @@
-from psiqworkbench import Qubits, QUInt
+from psiqworkbench import Qubits, QUInt, Qubrick
+from psiqworkbench.symbolics.qubrick_costs import QubrickCosts
 
 from typing import Optional
 
@@ -21,8 +22,14 @@ def write_uint(target: QUInt, number: int, ctrl: Optional[Qubits] = None):
             target[i].x(ctrl)
 
 
-def parallel_cnot(a: Qubits, b: Qubits):
-    n = len(a)
-    assert len(b) == n
-    for i in range(n):
-        b[i].x(a[i])
+class ParallelCnot(Qubrick):
+    def _compute(self, a: Qubits, b: Qubits):
+        n = a.num_qubits
+        assert b.num_qubits == n
+        for i in range(n):
+            b[i].x(a[i])
+
+    def _estimate(self, a: Qubits, b: Qubits):
+        n = a.num_qubits
+        # TODO: check if this is correct.
+        self.get_qc().add_cost_event(QubrickCosts(active_volume=n))

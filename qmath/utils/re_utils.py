@@ -6,6 +6,8 @@ from psiqworkbench.resource_estimation.qre._resource_dict import ResourceDict
 from psiqworkbench.symbolics import Parameter
 from psiqworkbench.utils.unstable_api_utils import ignore_unstable_warnings
 
+from ..utils.symbolic import SymbolicQFixed
+
 ignore_unstable_warnings()
 
 FILTERS_FOR_NUMERIC_RE = [">>clean-ladder-filter>>", ">>single-control-filter>>", ">>witness>>"]
@@ -91,24 +93,16 @@ def verify_re(
                 raise AssertionError(error)
 
 
-class SymbolicQFixed(SymbolicQubits):
-    """Symbolic register for fixed-precision signed number."""
-
-    def __init__(self, *, radix: int = 0, **kwargs):
-        super().__init__(**kwargs)
-        self.radix = radix
-
-
 def re_symbolic_fixed_point(op: Qubrick, n_inputs: int = 1) -> ResourceDict:
     """Symbolic resource estimation for fixed-point operation."""
     n = Parameter("n", "Register size")
     radix = Parameter("radix", "Radix")
 
-    qc = SymbolicQPU()
-    inputs = [SymbolicQFixed(num_qubits=n, name=f"input_{i}", qpu=qc, radix=radix) for i in range(n_inputs)]
+    qpu = SymbolicQPU()
+    inputs = [SymbolicQFixed(num_qubits=n, name=f"input_{i}", qpu=qpu, radix=radix) for i in range(n_inputs)]
     op.compute(*inputs)
 
-    re = resource_estimator(qc)
+    re = resource_estimator(qpu)
     return re.resources()
 
 

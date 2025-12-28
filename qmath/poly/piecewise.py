@@ -15,11 +15,11 @@ import psiqworkbench.qubricks as qbk
 from psiqworkbench import QFixed, QUInt, Qubits
 from psiqworkbench.qubricks import Qubrick
 
-from ..utils.gates import write_uint, parallel_cnot
+from ..utils.gates import write_uint
 from ..utils.lookup import TableLookup
 from .horner import HornerScheme
 from .remez import remez_piecewise, PiecewisePolynomial
-from ..mult.square import Square
+from ..func.square import Square
 
 
 # Converts signed real number to unsigned integer whose binary representation is
