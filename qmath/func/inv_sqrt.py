@@ -48,8 +48,9 @@ class _InitialGuess(Qubrick):
         # This resource estimate is correct only when radix is between 1/3 and 2/3 of num_qubits.
         n = a.num_qubits
         assert a.num_qubits == ans.num_qubits, "Input and output size must match for RE."
+        self.alloc_temp_qreg(1, "flag")
+        self.alloc_temp_qreg(n, "r")
         cost = QubrickCosts(
-            local_ancillae=n + 1,
             active_volume=52 * n,
             gidney_lelbows=n,
         )
@@ -73,6 +74,8 @@ class _NewtonIteration(Qubrick):
         MultiplyAdd().compute(x1, x0, t3)  # x1 := x0*(c-a*x0^2).
 
 
+# TODO: simplify RE for qubit_highwater using rewriters.
+# See https://github.com/PsiQ/bartiq/blob/main/docs/tutorials/2025_ieee_qw/04_rewriters.ipynb
 class InverseSquareRoot(Qubrick):
     """Evaluates function f(a)=a^-0.5.
 
