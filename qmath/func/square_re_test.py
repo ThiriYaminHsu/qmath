@@ -7,4 +7,4 @@ def test_re_square():
     re_symbolic = re_symbolic_fixed_point(op, n_inputs=2)
     re_numeric = lambda assgn: re_numeric_fixed_point(op, assgn, n_inputs=2)
     for n, radix in [(10, 1), (10, 5), (10, 9)]:
-        verify_re(re_symbolic, re_numeric, {"n": n, "radix": radix}, av_tol=0.001)
+        verify_re(re_symbolic, re_numeric, {"n": n, "radix": radix}, av_rtol=0.001)

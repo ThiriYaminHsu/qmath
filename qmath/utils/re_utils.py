@@ -61,7 +61,8 @@ def verify_re(
     re_numeric: Callable[[dict[str, int]], ResourceDict],
     assgn: dict[str, int],
     *,
-    av_tol: float = 0.0,
+    av_rtol: float = 0.0,
+    av_atol: float = 0.0,
     no_fail=False,
 ):
     """
@@ -70,14 +71,16 @@ def verify_re(
     :param re_symbolic: Symbolic resource estimate.
     :param re_numeric: Function to compute numeric RE for given assignment.
     :param assgn: Assignment (maps param name to value).
-    :param av_tol: Relative tolerance for active volume.
+    :param av_rtol: Relative tolerance for active volume.
+    :param av_atol: Absolute tolerance for active volume.
     :param no_fail: If true, will print errors but not fail the test.
     """
     re1 = re_numeric(assgn)
     re2 = re_symbolic.evaluate(assgn)
     for metric in METRICS:
-        tol = av_tol if metric == "active_volume" else 0.0
-        if not np.isclose(re1[metric], re2[metric], rtol=tol):
+        rtol = av_rtol if metric == "active_volume" else 0.0
+        atol = av_atol if metric == "active_volume" else 0.0
+        if not np.isclose(re1[metric], re2[metric], rtol=rtol, atol=atol):
             error = " ".join(
                 [
                     f"Mismatch: {metric}.",

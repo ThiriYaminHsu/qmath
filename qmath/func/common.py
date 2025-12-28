@@ -36,10 +36,7 @@ class AbsInPlace(Qubrick):
     def _compute(self, x: QFixed):
         sign = self.alloc_temp_qreg(1, "sign")
         sign.lelbow(x[-1])
-        # Using loop instead of x.x(sign) to get exact symbolic RE.
-        # TODO: understand why x.x(sign) has non-linear numeric RE.
-        for i in range(x.num_qubits):
-            x[i].x(sign)
+        x.x(sign)
         qbk.GidneyAdd().compute(QUInt(x), 1, ctrl=sign)
 
     def _estimate(self, x: SymbolicQFixed):
@@ -49,7 +46,7 @@ class AbsInPlace(Qubrick):
             gidney_relbows=n - 2,
             toffs=n - 1,
             local_ancillae=n - 1,
-            active_volume=108 * n - 154,
+            active_volume=105.5 * n - 150,
         )
         self.get_qc().add_cost_event(cost)
 

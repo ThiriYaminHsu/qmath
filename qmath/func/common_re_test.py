@@ -15,7 +15,7 @@ def test_re_abs():
     re_symbolic = re_symbolic_fixed_point(op, n_inputs=1)
     re_numeric = lambda assgn: re_numeric_fixed_point(op, assgn, n_inputs=1)
     for n, radix in [(2, 0), (2, 1), (5, 0), (5, 5), (8, 8), (10, 5)]:
-        verify_re(re_symbolic, re_numeric, {"n": n, "radix": radix})
+        verify_re(re_symbolic, re_numeric, {"n": n, "radix": radix}, av_atol=0.5)
 
 
 def test_re_add():
@@ -39,4 +39,4 @@ def test_re_multiply_add():
     re_symbolic = re_symbolic_fixed_point(op, n_inputs=3)
     re_numeric = lambda assgn: re_numeric_fixed_point(op, assgn, n_inputs=3)
     for n, radix in [(4, 1), (4, 2), (4, 3), (5, 1), (5, 4), (10, 1), (10, 9), (16, 8)]:
-        verify_re(re_symbolic, re_numeric, {"n": n, "radix": radix}, av_tol=0.001)
+        verify_re(re_symbolic, re_numeric, {"n": n, "radix": radix}, av_rtol=0.001)

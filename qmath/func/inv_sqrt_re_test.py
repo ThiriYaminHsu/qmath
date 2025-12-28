@@ -21,7 +21,7 @@ def test_newton_iteration():
     re_symbolic = re_symbolic_fixed_point(op, n_inputs=3)
     re_numeric = lambda assgn: re_numeric_fixed_point(op, assgn, n_inputs=3)
     for n, radix in [(10, 5)]:
-        verify_re(re_symbolic, re_numeric, {"n": n, "radix": radix}, av_tol=0.001)
+        verify_re(re_symbolic, re_numeric, {"n": n, "radix": radix}, av_rtol=0.001)
 
 
 @pytest.mark.parametrize("num_iterations", [1, 2])
@@ -33,4 +33,4 @@ def test_re_inv_sqrt(num_iterations: int):
     if RUN_SLOW_TESTS:
         test_cases += [(6, 2), (6, 4), (10, 3), (10, 5), (10, 8), (20, 7), (20, 12)]
     for n, radix in test_cases:
-        verify_re(re_symbolic, re_numeric, {"n": n, "radix": radix}, av_tol=0.001)
+        verify_re(re_symbolic, re_numeric, {"n": n, "radix": radix}, av_rtol=0.001)
