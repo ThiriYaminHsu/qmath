@@ -9,19 +9,19 @@ Reference:
 import math
 from typing import Callable
 
-from psiqworkbench.symbolics.qubrick_costs import QubrickCosts
 import numpy as np
 import psiqworkbench.qubricks as qbk
-from psiqworkbench import QFixed, QUInt, Qubits, QInt
+from psiqworkbench import QFixed, QUInt
 from psiqworkbench.qubricks import Qubrick
 
+from ..func.common import Add, MultiplyAdd
+from ..func.compare import CompareConstGT
+from ..func.square import Square
 from ..utils.gates import write_uint
 from ..utils.lookup import TableLookup
-from .horner import HornerScheme
-from .remez import remez_piecewise, PiecewisePolynomial
-from ..func.square import Square
-from ..func.common import MultiplyAdd, Add
 from ..utils.symbolic import alloc_temp_qreg_like
+from .horner import HornerScheme
+from .remez import PiecewisePolynomial, remez_piecewise
 
 
 # Converts signed real number to unsigned integer whose binary representation is
@@ -47,27 +47,16 @@ class WritePieceNumber(Qubrick):
     comparisons and writes the result as unsigned integer to `target`.
     """
 
-    def _compute(self, x: QFixed, target: QUInt, points: list[int]):
+    def _compute(self, x: QFixed, target: QUInt, points: list[float]):
         assert len(points) + 1 <= 2**target.num_qubits
         assert points == sorted(points)
 
         for i, split_point in enumerate(points):
-            comparator = qbk.CompareGT()
-            comparator.compute(x, split_point)
+            comparator = CompareConstGT(split_point)
+            comparator.compute(x)
             result = comparator.get_result_qreg()
             write_uint(target, (i + 1) ^ i, ctrl=result)
             comparator.uncompute()
-
-    def _estimate(self, x: QFixed, target: QUInt, points: list[int]):
-        # TODO: use correct numbers.
-        n = x.num_qubits
-        cost = QubrickCosts(
-            active_volume=n,
-            gidney_lelbows=n,
-            gidney_relbows=n,
-            toffs=n,
-        )
-        self.get_qc().add_cost_event(cost)
 
 
 class EvalPiecewisePolynomial(Qubrick):
