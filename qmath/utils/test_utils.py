@@ -40,6 +40,7 @@ class QPUTestHelper:
         It will compile circuit for applied operations.
         """
         self.result_qreg_mask = result_qreg.mask()
+        self.result_qreg_indices = result_qreg.qubit_indices()
         ops = self.qpu.get_instructions()[self.prep_length :]
         self.cpp_ops = convert_ops_to_cpp(ops)
 
@@ -60,7 +61,10 @@ class QPUTestHelper:
         qpu.flush()
 
         sim._put_native(self.cpp_ops)
-        result_qreg = QFixed(Qubits(from_mask=self.result_qreg_mask, name="temp", qpu=qpu), radix=self.radix)
+        result_qreg = QFixed(
+            Qubits(num_qubits=len(self.result_qreg_indices), scatter=self.result_qreg_indices, name="temp", qpu=qpu),
+            radix=self.radix,
+        )
         if check_no_side_effect:
             new_other_val = other_reg.read()
             assert new_other_val == other_val, "Changed qubits other than result."

@@ -151,3 +151,30 @@ class MultiplyConstAdd(Qubrick):
 
     def _estimate(self, dst: SymbolicQFixed, lhs: SymbolicQFixed):
         pass
+
+
+class Sqrt(Qubrick):
+    """Computes square root of QFixed number.
+
+    Uses qbk.Sqrt (which is designed for QUInt and halves result size) and then
+    adds padding qubits so the output has the same size as input.
+
+    Requires even size register size and radix.
+    """
+
+    def _compute(self, x: QFixed):
+        n = x.num_qubits
+        r = x.radix
+        assert n % 2 == 0 and r % 2 == 0, "Size and radix must be even"
+        assert 0 <= r <= n
+
+        func = qbk.Sqrt()
+        func.compute(x)
+        result = func.get_result_qreg()
+        if r > 0:
+            padding_left = self.alloc_temp_qreg(r // 2, "pl")
+            result = padding_left | result
+        if (n - r) > 0:
+            padding_right = self.alloc_temp_qreg((n - r) // 2, "pr")
+            result = result | padding_right
+        self.set_result_qreg(result)
