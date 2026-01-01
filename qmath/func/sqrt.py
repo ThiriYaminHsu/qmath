@@ -73,7 +73,7 @@ class Sqrt(Qubrick):
             gidney_lelbows=num_elbows,
             gidney_relbows=num_elbows,
             toffs=n + 1 + (n % 2),
-            local_ancillae=2 * x.num_qubits + 1 + 3 * (n % 2) + 3 * r,
+            local_ancillae=2 * n + 1 + 3 * (n % 2) + r,
             active_volume=18.75 * n**2 + (151.5 + 37.5 * (n % 2)) * n + 170.25 * (n % 2) - 225,
         )
         self.get_qc().add_cost_event(cost)
