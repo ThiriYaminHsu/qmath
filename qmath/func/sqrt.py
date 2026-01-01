@@ -2,6 +2,8 @@ import psiqworkbench.qubricks as qbk
 from psiqworkbench import QFixed, Qubits, QUFixed
 from psiqworkbench.qubricks import Qubrick
 from psiqworkbench.symbolics.qubrick_costs import QubrickCosts
+from psiqworkbench.symbolics import Parameter
+
 
 from ..func.common import AbsInPlace, MultiplyAdd
 from ..utils.gates import ParallelCnot
@@ -58,3 +60,20 @@ class Sqrt(Qubrick):
             right_pad = self.alloc_temp_qreg(n_right_pad, "right_pad")
 
         self.set_result_qreg(QFixed(left_pad | ans | right_pad, radix=x.radix))
+
+    def _estimate(self, x: SymbolicQFixed):
+        # Number of extra padding quibts added before calling Sqrt.
+        r = (x.radix + int(self.half_arg)) % 2
+
+        # Size of input to Sqrt.
+        n = x.num_qubits + r
+
+        num_elbows = 0.25 * n**2 + 0.5 * (3 + n % 2) * n - 4 + 1.75 * (n % 2)
+        cost = QubrickCosts(
+            gidney_lelbows=num_elbows,
+            gidney_relbows=num_elbows,
+            toffs=n + 1 + (n % 2),
+            local_ancillae=2 * x.num_qubits + 1 + 3 * (n % 2) + 3 * r,
+            active_volume=18.75 * n**2 + (151.5 + 37.5 * (n % 2)) * n + 170.25 * (n % 2) - 225,
+        )
+        self.get_qc().add_cost_event(cost)

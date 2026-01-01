@@ -26,7 +26,7 @@ def _sqrt_half(x: QFixed) -> QFixed:
 
 
 class Neq(Qubrick):
-    """Computes t=(a!=b)."""
+    """Computes t:=(a!=b)."""
 
     def _compute(self, t: Qubits, a: Qubits, b: Qubits):
         t.lelbow(a | b)
